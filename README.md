@@ -6,12 +6,34 @@ This project aims to reverse-engineer Reader Rabbit Preschool and ultimately por
 
 ## Project status
 
-All game data formats are decoded ([`docs/formats.md`](docs/formats.md)), and the engine, scene flow and four activities are mapped, with ABC Diner traced end to end ([`docs/game-logic.md`](docs/game-logic.md)). See the task checklist in [`docs/plan.md`](docs/plan.md). No original executable has been run, and port implementation has not started.
+All game data formats are decoded ([`docs/formats.md`](docs/formats.md)), and the engine, scene flow and four activities are mapped, with ABC Diner traced end to end ([`docs/game-logic.md`](docs/game-logic.md)). See the task checklist in [`docs/plan.md`](docs/plan.md). No original executable has been run. A native macOS app (`app/`) now runs the main menu, the activity exteriors and ABC Diner using your own game files.
 
 The current workspace contains a locally supplied disc copy under `game/`, including Windows executables and the `RRPDATA/*.DAT` media files. The `.MPS`, `.RSC`, `.GRP` and Smacker files belong to the autorun previews player for other titles, not to this game. The directory is ignored by Git and is not part of the repository history. Treat those file-format observations as preliminary until verified with recorded analysis evidence.
 
+## Running the macOS app
+
+Requires macOS 13+ and Xcode (Swift 5.10 or later).
+
+```sh
+./scripts/build-app.sh                       # builds dist/Reader Rabbit's Preschool.app
+open "dist/Reader Rabbit's Preschool.app"     # asks for your game folder on first launch
+```
+
+On first launch, choose the folder that contains `RRPDATA` (the top level of your CD or a copy of it). The choice is remembered; use **Game → Choose Game Folder…** to change it. Progress is saved to `~/Library/Application Support/ReaderRabbitPreschool/player.json`.
+
+For development, `swift run --package-path app ReaderRabbit --game game` runs from source. A headless mode renders scripted sessions to PNG for checking (write output under `analysis/`):
+
+```sh
+app/.build/debug/ReaderRabbit --snapshot --game game --out analysis/snap \
+  "t 3" "click 540 100" "t 3" "shot exterior" "start game 1" "t 30" "solve" "shot diner"
+```
+
+Current state: the main menu, the four activity exteriors and ABC Diner are playable. Counting Club, Shape Shack, Pattern Parade and the bonus areas show placeholders. See the [plan](docs/plan.md) for what's left.
+
 ## Repository layout
 
+- `app/` — the macOS app (Swift package): `Data/` decoders, `Engine/` game loop, actors, audio and framebuffer, `Scenes/` menu, exteriors and activities, `App/` window and headless snapshot mode.
+- `scripts/build-app.sh` — builds the `.app` bundle into `dist/` (git-ignored).
 - `docs/plan.md` — investigation stages, task checklist, setup, safety constraints and status.
 - `docs/formats.md` — decoded data formats, loader functions and evidence ledger.
 - `docs/game-logic.md` — engine, scene flow, activities and the ABC Diner trace.

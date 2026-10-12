@@ -168,3 +168,19 @@ A marching band has gaps in its line-up, and the child fills them so a colour, a
 - **Unmapped scenes:** the bonus-area games, sign-in 30200, scene 30300 (`FUN_0041af24`, unreferenced), the intro and finale, and the uses of SPEECH 20000–20098 and 22000–22259.
 - **Unknown fields:** a few player-record fields (`+0xc`, `+0x20`, `+0x8a`, `+0x92–0xa5`) and roster state −2.
 - **Unextracted resources:** dialog resources inside the EXE (`0xbc7`, `0xbdb`, `0xbe0`, `0xbea`, `0x3a7`, 2000–2003).
+
+## 7. How the macOS port maps onto this
+
+The port in `app/` re-implements the engine described above. It doesn't emulate the Windows code.
+
+| Original | Port |
+|---|---|
+| 640×960 offscreen buffer, dirty-rect compositor | `Framebuffer`: background page plus a full redraw each tick, converted to RGBA through the scene palette |
+| Actor slots and step scripts (`FUN_004340de`, `FUN_00433d23`) | `Actor` (`advance()` mirrors Actor_Advance) |
+| Shared COMB actor engine (`FUN_0041d5ea`, `FUN_0041df18`) | `LayoutScene` (idle, playing, looping, continuous and break-loop states; TRIGGER, IFSPEECH and cue handling) |
+| Scene handler quad and `DAT_004483c0` | `Scene` protocol and `Game.change(to:sound:)` |
+| Busy-wait tick at `1000/fps − 9` ms | `AppDelegate.pump()` against a deadline, using the same period formula |
+| Software mixer, two channels | `AudioSystem` (AVAudioEngine; speech/SFX and music nodes) |
+| LIPS polling | `LipSync`: one mouth value per tick, routed to the actor named in the LIPS header |
+| `RRP.DAT` player records | `PlayerProfile` JSON, indexed in menu order (the save-file order trap doesn't apply) |
+| Tables in `RRPW32.EXE` (food names, orders) | `ExeTables` reads them from the user's EXE at runtime |

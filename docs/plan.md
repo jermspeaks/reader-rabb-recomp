@@ -51,13 +51,20 @@ Status: `[x]` done · `[~]` partly done · `[ ]` not started. Each finished task
 
 ### Stage 6: Port
 
-- [ ] Choose the architecture: a native re-implementation that reads the DATs at runtime, or a conversion step that produces modern assets. Decide this after Stage 3.
-- [ ] Prototype: load the DAT files, show the main menu with the correct palette, and play one sound.
-- [ ] Implement the activities, starting with ABC Diner.
+- [x] Architecture: a native Swift/AppKit app (`app/`) that reads the user's own DAT files and `RRPW32.EXE` tables at runtime. No game data is bundled or committed. See game-logic.md §7.
+- [x] Engine: DAT/NE loader, ASEQ/RRGB/NFNT/COMB/LIPS/WAVE decoding, 640×480 indexed framebuffer, actor step scripts, 8 fps tick, two-channel audio with lip sync, scene switching, saved progress.
+- [x] Main menu and the four activity exteriors, driven by their COMB layouts (actors, hotspots, speech cues, host introductions, keys and carousel).
+- [x] ABC Diner playable: orders, cupboards, serving, right/wrong feedback, ticket, recap, progress meter, key and level-up.
+- [ ] Counting Club.
+- [ ] Shape Shack.
+- [ ] Pattern Parade.
+- [ ] Remaining scenes: intro and title, sign-in (multiple players), parent menu (LEVELS and info pages), bonus areas, finale and credits, scene transition pictures and effects.
+- [ ] ABC Diner polish: chef/customer gesture animations, food flying to the bowl, the halfway bonus show and the reward show.
+- [ ] App polish: icon, a "choose your game folder" first-run screen, and a signed/notarized build for sharing.
 
 ## Working rules
 
-- Static analysis only, unless Stage 5 is explicitly agreed. Never run the game, installers or registration utilities on the host.
+- Static analysis only, unless Stage 5 is explicitly agreed. Never run the original game, installers or registration utilities on the host. (Our own macOS app is fine to run.)
 - Leave `game/` untouched. It is git-ignored. Derived material (the Ghidra project, pseudocode, renders and REA snapshots) goes in the git-ignored `analysis/` directory. Commit only original notes, tools and implementation code.
 - For every claim, record its evidence (function address, resource ID, or tool output) and label it **Observed**, **Validated** or **Inferred**. Keep unknowns explicit.
 - Pseudocode is analysis output, not original source. Re-implement behaviour rather than copying decompiled code verbatim.
