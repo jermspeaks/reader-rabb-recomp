@@ -39,26 +39,3 @@ final class PlaceholderActivityScene: Scene {
         }
     }
 }
-
-/// Stand-in for the bonus areas behind each exterior's signpost.
-final class BonusScene: Scene {
-    let activity: Activity
-    init(_ activity: Activity) { self.activity = activity }
-
-    func enter(_ game: Game) {
-        game.setBackground(activity.bonusBackground)
-        game.playMusic(activity.bonusMusic, loop: false)
-    }
-
-    func tick(_ game: Game) {}
-
-    func click(_ game: Game, x: Int, y: Int) { leave(game) }
-
-    func key(_ game: Game, _ key: Key) { leave(game) }
-
-    func exit(_ game: Game) { game.stopMusic() }
-
-    private func leave(_ game: Game) { game.change(to: ExteriorScene(activity)) }
-
-    func draw(_ game: Game, _ fb: Framebuffer) {}
-}

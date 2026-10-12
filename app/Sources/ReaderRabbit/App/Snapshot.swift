@@ -6,8 +6,8 @@ import UniformTypeIdentifiers
 ///   ReaderRabbit --snapshot --game DIR --out DIR "t 20" "click 500 100" "shot menu" ...
 /// Commands: `t N` runs N ticks, `click X Y`, `key NAME` (escape, enter, space,
 /// left, right, up, down or a character), `shot NAME` writes NAME.png,
-/// `level A L` sets activity A's level, `start menu|ext N|game N` jumps to a
-/// scene. Anything else is passed to the current scene if it is DebugDrivable
+/// `level A L` sets activity A's level, `start menu|intro|finale|parent|ext N|
+/// game N|bonus N` jumps to a scene. Anything else is passed to the current scene if it is DebugDrivable
 /// (ABC Diner: `solve` / `miss` answer the current item).
 enum Snapshot {
     static func run(_ args: [String]) -> Bool {
@@ -51,11 +51,16 @@ enum Snapshot {
                 write(game.fb.makeImage(), to: out.appendingPathComponent("\(p[1]).png"))
                 print("shot \(p[1]) scene=\(type(of: game.scene!)) tick=\(game.tickCount)")
             case "start":
-                // Jump straight to a scene: start menu | ext N | game N (menu-order activity index).
+                // Jump straight to a scene: start menu | intro | finale | parent |
+                // ext N | game N | bonus N (menu-order activity index).
                 let n = Int(p.count > 2 ? p[2] : "0") ?? 0
                 switch p[1] {
                 case "ext": game.change(to: ExteriorScene(Activity(rawValue: n)!))
                 case "game": game.change(to: Activity(rawValue: n)!.makeGameScene())
+                case "intro": game.change(to: IntroScene())
+                case "finale": game.change(to: EndingScene())
+                case "bonus": game.change(to: BonusScene(Activity(rawValue: n)!))
+                case "parent": game.change(to: ParentMenuScene())
                 default: game.change(to: MainMenuScene())
                 }
                 game.tick()

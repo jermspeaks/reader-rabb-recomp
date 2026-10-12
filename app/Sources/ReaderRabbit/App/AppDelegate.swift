@@ -88,7 +88,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             g.onQuitRequest = { [weak self] in self?.confirmQuit() }
             game = g
             view?.game = g
-            g.start(MainMenuScene())
+            g.start(IntroScene())
             nextTick = Date()
             timer = Timer.scheduledTimer(withTimeInterval: 0.005, repeats: true) { [weak self] _ in
                 self?.pump()
@@ -128,6 +128,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         game?.player.save()
     }
 
+    /// The original's Ctrl+P parent overlay (FUN_0041ce84).
+    @objc private func parentOptions(_ sender: Any?) {
+        game?.change(to: ParentMenuScene())
+    }
+
     @objc private func resetProgress(_ sender: Any?) {
         let alert = NSAlert()
         alert.messageText = "Reset all progress and keys?"
@@ -157,6 +162,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         gameMenu.addItem(withTitle: "Upper/Lower Case Letters", action: #selector(toggleCase(_:)), keyEquivalent: "")
         gameMenu.addItem(.separator())
         gameMenu.addItem(withTitle: "Choose Game Folder…", action: #selector(chooseFolder(_:)), keyEquivalent: "o")
+        gameMenu.addItem(withTitle: "Parent Options…", action: #selector(parentOptions(_:)), keyEquivalent: "p")
         gameMenu.addItem(withTitle: "Reset Progress…", action: #selector(resetProgress(_:)), keyEquivalent: "")
         for item in gameMenu.items { item.target = self }
         gameItem.submenu = gameMenu
