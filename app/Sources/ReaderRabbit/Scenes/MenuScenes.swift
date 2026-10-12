@@ -87,12 +87,10 @@ final class MainMenuScene: LayoutScene {
             goToExterior(game, Activity(rawValue: (-item.id - 10) / 2)!)
         case 2002:
             break
-        case 530: // keyhole
-            if game.player.totalKeys == 16 {
-                game.say(3775)
-            } else {
-                game.say(3775)
-            }
+        case 530: // keyhole: the finale once every key is earned (FUN_00419223 case 0x212)
+            if Self.finaleUnlocked(game) { startFinale(game); return }
+            stopScript(game)
+            game.say(3775)
             activate(item)
         case 510: // carousel
             stopScript(game)
@@ -111,8 +109,17 @@ final class MainMenuScene: LayoutScene {
         }
     }
 
+    /// FUN_004184fa state 6: once the greeting ends, a player who has just
+    /// earned the 16th key goes straight through the keyhole.
+    override func afterTick(_ game: Game) {
+        if Self.finaleUnlocked(game), !game.player.endingSeen, !speaking, !game.speechPlaying {
+            startFinale(game)
+        }
+    }
+
     override func key(_ game: Game, _ key: Key) {
         switch key {
+        case .enter where Self.finaleUnlocked(game): startFinale(game)
         case .left: goToExterior(game, .countingClub)
         case .up: goToExterior(game, .abcDiner)
         case .right: goToExterior(game, .shapeShack)
