@@ -71,6 +71,7 @@ Status: `[x]` done · `[~]` partly done · `[ ]` not started. Each finished task
 - [ ] Store the gallery picture variants and the stage picture index in `PlayerProfile`.
 - [ ] ABC Diner polish: chef/customer gesture animations, food flying to the bowl, the halfway bonus show and the reward show.
 - [ ] App/release polish: app icon and signed/notarized distribution build. The app already prompts for a game folder on first launch and provides **Game → Choose Game Folder…**.
+- [ ] Build-time user asset packaging: let a user provide their own game copy and generate a self-contained app with the full runtime game-asset set embedded, so the installed app no longer needs a separate game folder. Keep original files, extracted assets, and generated bundles containing game-derived content out of the repository and public releases; assess licensing and build-path implications before implementation.
 
 ## Suggested next steps
 
@@ -80,6 +81,7 @@ Status: `[x]` done · `[~]` partly done · `[ ]` not started. Each finished task
 4. Decide whether multiple-player sign-in is in scope; if so, map and implement original scene 30200.
 5. Listen to the identified speech clips and record what they say. The port's audio and lip sync also need a real listening check.
 6. Add release polish (icon and signing/notarization) if distribution is intended.
+7. Plan a build-time workflow that embeds the full runtime asset set from a user's own game copy in that user's generated app. This is future work only; do not add or distribute game assets as part of the repository.
 
 These are priorities, not a dependency order. Keep original-game observations, port behavior, and inferred compatibility choices separately labelled.
 
@@ -97,6 +99,7 @@ These are priorities, not a dependency order. Keep original-game observations, p
 - Leave `game/` untouched. It is git-ignored. Derived material (the Ghidra project, pseudocode, renders and REA snapshots) goes in the git-ignored `analysis/` directory. Commit only original notes, tools and implementation code.
 - For every claim, record its evidence (function address, resource ID, or tool output) and label it **Observed**, **Validated** or **Inferred**. Keep unknowns explicit.
 - Pseudocode is analysis output, not original source. Re-implement behaviour rather than copying decompiled code verbatim.
+- The repository's original code is GPL-3.0-only (`LICENSE`). That license does not cover the original game or other third-party material. Keep all game-derived assets and locally generated bundles containing them out of the repository and public releases; see [`RIGHTS_AND_LICENSES.md`](../RIGHTS_AND_LICENSES.md).
 
 ## Tooling
 

@@ -36,6 +36,7 @@ Current state: the complete scene set is playable, but several features are appr
 - `scripts/build-app.sh` — builds the `.app` bundle into `dist/` (git-ignored).
 - `docs/plan.md` — implementation status, open tasks, validation notes, setup and safety constraints.
 - `AGENTS.md` — repository navigation, coding workflow, data-safety rules and validation commands.
+- `LICENSE` and [`RIGHTS_AND_LICENSES.md`](RIGHTS_AND_LICENSES.md) — the source license and the boundary between project code and game content.
 - `docs/formats.md` — decoded data formats, loader functions and evidence ledger.
 - `docs/game-logic.md` — engine, scene flow, activities and the ABC Diner trace.
 - `tools/` — read-only parsers and validators (`ne_resources.py`, `aseq.py`, `lips.py`, `comb.py`, `nfnt.py`), a PNG renderer for local checks (`render_aseq.py`) and a Ghidra export script.
@@ -51,6 +52,12 @@ Current state: the complete scene set is playable, but several features are appr
 5. Preserve the user's game copy and local save. `game/` and `analysis/` are git-ignored; never commit proprietary game files, extracted copyrighted assets, or generated analysis output.
 6. The previous session reported that the local save contained test progression. Its current state has not been checked here; use **Game → Reset Progress…** only if you want a fresh save.
 
+## License and game rights
+
+The independently authored source code and tools in this repository are licensed under the **GNU General Public License, version 3 only** (GPL-3.0-only); see [`LICENSE`](LICENSE). This license does not cover Reader Rabbit Preschool or grant rights to its code, data, artwork, audio, text, or other game-derived material. The project is independent and is not affiliated with or endorsed by the game's rights holders. See [`RIGHTS_AND_LICENSES.md`](RIGHTS_AND_LICENSES.md) for the boundary and handling guidance.
+
+The current app reads data from the game folder you provide. A future task is to let you generate a self-contained app embedding the full runtime asset set from your own game copy; this is not implemented yet. Any locally generated app that embeds game-derived content must remain personal and must not be committed or distributed from this repository.
+
 ## Contributing and handling game data
 
-Only contribute original analysis notes, independently authored tools, and implementation code. Before staging or committing changes, verify that `game/` and any generated asset/output directories are ignored and absent from `git ls-files`. Respect applicable copyright and license restrictions when handling or distributing any game content.
+Only contribute original analysis notes, independently authored tools, and implementation code. Before staging or committing changes, verify that `game/`, extracted assets, and generated app/output directories are ignored and absent from `git ls-files`. Respect applicable copyright and license restrictions when handling or distributing any game content.
