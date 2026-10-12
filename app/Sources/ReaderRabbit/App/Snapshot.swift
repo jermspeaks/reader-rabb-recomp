@@ -21,6 +21,7 @@ enum Snapshot {
         }
         let out = URL(fileURLWithPath: outDir)
         try? FileManager.default.createDirectory(at: out, withIntermediateDirectories: true)
+        PlayerProfile.persistenceEnabled = false
         let game: Game
         do { game = try Game(root: URL(fileURLWithPath: gameDir)) } catch {
             print("error: \(error.localizedDescription)")

@@ -63,12 +63,16 @@ struct PlayerProfile: Codable {
     }
 
     static func load() -> PlayerProfile {
-        guard let d = try? Data(contentsOf: url), let p = try? JSONDecoder().decode(PlayerProfile.self, from: d)
+        guard persistenceEnabled, let d = try? Data(contentsOf: url), let p = try? JSONDecoder().decode(PlayerProfile.self, from: d)
         else { return PlayerProfile() }
         return p
     }
 
+    /// Off in headless snapshot runs so tests never touch the real save file.
+    static var persistenceEnabled = true
+
     func save() {
+        guard Self.persistenceEnabled else { return }
         if let d = try? JSONEncoder().encode(self) { try? d.write(to: Self.url) }
     }
 }

@@ -129,6 +129,9 @@ class LayoutScene: Scene {
         afterTick(game)
     }
 
+    /// Called when an actor reaches a LOOP step; return true to stop it there.
+    func loopReached(_ game: Game, _ item: Item) -> Bool { false }
+
     /// Hook called after actors have advanced.
     func afterTick(_ game: Game) {}
 
@@ -160,6 +163,7 @@ class LayoutScene: Scene {
                 item.state = .idle
                 s += 1
             case StepCode.loop:
+                if loopReached(game, item) { return }
                 s = 0
             default:
                 // END: stay on the last drawn step.

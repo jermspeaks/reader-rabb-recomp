@@ -205,6 +205,15 @@ final class ExteriorScene: LayoutScene {
         }
     }
 
+    /// The Pattern Parade drum major / door animation (2840/2841) ends by
+    /// marching into the game (FUN_0041df18: LOOP on 0xb18/0xb19).
+    override func loopReached(_ game: Game, _ item: Item) -> Bool {
+        guard activity == .patternParade, item.id == 2840 || item.id == 2841 else { return false }
+        stopScript(game)
+        game.change(to: activity.makeGameScene())
+        return true
+    }
+
     private func enterActivity(_ game: Game) {
         stopScript(game)
         game.change(to: activity.makeGameScene(), sound: activity.enterSpeech)
