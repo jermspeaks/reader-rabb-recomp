@@ -1,21 +1,21 @@
 # Reader Rabbit Preschool for macOS
 
-This project aims to reverse-engineer Reader Rabbit Preschool and ultimately port the game to macOS. The work is staged: first establish how the original program and its data work, then design and build a compatible macOS implementation. The investigation plan and evidence requirements are in the [reverse-engineering plan](docs/reverse-engineering-plan.md).
+This project aims to reverse-engineer Reader Rabbit Preschool and ultimately port the game to macOS. The work is staged: first establish how the original program and its data work, then design and build a compatible macOS implementation. The investigation plan and evidence requirements are in the [plan](docs/plan.md).
 
 > **Bring your own game copy.** This repository does not include Reader Rabbit Preschool or its proprietary game files. You must provide your own legally obtained copy of the game. The local `game/` directory is intentionally excluded from Git; do not commit the game, extracted proprietary assets, or other copyrighted payloads.
 
 ## Project status
 
-The first static-analysis pass is complete; see [`docs/formats.md`](docs/formats.md). The game's media containers, audio, sprite/animation images, and palettes are decoded. The next step is mapping the game's scene and activity logic in `RRPW32.EXE`. No original executable has been run, and port implementation has not started.
+All game data formats are decoded ([`docs/formats.md`](docs/formats.md)), and the engine, scene flow and four activities are mapped, with ABC Diner traced end to end ([`docs/game-logic.md`](docs/game-logic.md)). See the task checklist in [`docs/plan.md`](docs/plan.md). No original executable has been run, and port implementation has not started.
 
 The current workspace contains a locally supplied disc copy under `game/`, including Windows executables and the `RRPDATA/*.DAT` media files. The `.MPS`, `.RSC`, `.GRP` and Smacker files belong to the autorun previews player for other titles, not to this game. The directory is ignored by Git and is not part of the repository history. Treat those file-format observations as preliminary until verified with recorded analysis evidence.
 
 ## Repository layout
 
-- `docs/reverse-engineering-plan.md` — investigation stages, current setup, safety constraints, and next actions.
+- `docs/plan.md` — investigation stages, task checklist, setup, safety constraints and status.
 - `docs/formats.md` — decoded data formats, loader functions and evidence ledger.
-- `tools/` — read-only parsers (`ne_resources.py`, `aseq.py`), a PNG renderer for local checks (`render_aseq.py`) and a Ghidra export script.
-- `scan_graphic_signatures.py` — early signature scanner, superseded by `tools/`.
+- `docs/game-logic.md` — engine, scene flow, activities and the ABC Diner trace.
+- `tools/` — read-only parsers and validators (`ne_resources.py`, `aseq.py`, `lips.py`, `comb.py`, `nfnt.py`), a PNG renderer for local checks (`render_aseq.py`) and a Ghidra export script.
 - `analysis/` — local Ghidra project, pseudocode and renders; git-ignored because it derives from proprietary files.
 - `game/` — local user-supplied game files, excluded from version control.
 
@@ -32,7 +32,7 @@ These tool installations are machine-local and are not vendored in this reposito
 
 ## Handoff for the next agent
 
-1. Read this README and [`docs/reverse-engineering-plan.md`](docs/reverse-engineering-plan.md) before changing files or analyzing binaries.
+1. Read this README and [`docs/plan.md`](docs/plan.md) before changing files or analyzing binaries.
 2. Confirm the active REA tool/provider status. Use the existing Ghidra route for static analysis; do not run the game or installers. The supplied Windows executable is not known to run natively on macOS.
 3. Begin with a read-only inventory of the user's files in `game/`, recording file identity, size, detected format, hashes, coverage, and limitations as analysis Evidence. Keep Evidence-backed observations distinct from preliminary inventory guesses.
 4. Focus first on `RRPW32.EXE`: establish its role and trace how it locates/loads scripts and resources. Follow the plan's staged approach before attempting extraction or implementation.
