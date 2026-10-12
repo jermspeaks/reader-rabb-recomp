@@ -2,6 +2,7 @@
 
 ## Start here
 
+- Check `git status` first; branches, staged changes, and local files can differ between sessions. Do not rely on a commit hash from an earlier handoff.
 - Read [`README.md`](README.md) for the app workflow and repository boundaries.
 - Read [`docs/plan.md`](docs/plan.md) for current status, remaining work, validation notes, and reverse-engineering constraints.
 - Read [`docs/formats.md`](docs/formats.md) for file-format findings and [`docs/game-logic.md`](docs/game-logic.md) for original behavior and the port's mappings.
@@ -27,6 +28,7 @@
 - The original game is bring-your-own. Do not commit game files, extracted proprietary assets, local Ghidra projects, screenshots/renders from copyrighted assets, or other generated material derived from the game. `game/` and `analysis/` are intentionally ignored.
 - Do not modify the user's files under `game/`. Do not run the original Windows executable, installer, or registration utilities on the host. Original-game runtime testing is permitted only through the isolated, disposable Windows VM process described in `docs/plan.md` and after that work is explicitly agreed.
 - The macOS port may be built and run for development. Avoid changing real save data during tests; headless snapshot mode is the safe path for scripted checks.
+- A prior session reported test progression in `~/Library/Application Support/ReaderRabbitPreschool/player.json`; this was not rechecked in the current handoff. Never reset or delete it automatically; only use **Game → Reset Progress…** if the user wants a fresh profile.
 - Keep implementation behavior, observations from the original, and inferred compatibility decisions clearly distinguished in code/docs. Add original code addresses/resource IDs or test commands where useful; preserve unresolved questions rather than presenting guesses as fact.
 
 ## Change and validation practices

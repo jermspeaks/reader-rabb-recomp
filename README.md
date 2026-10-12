@@ -43,15 +43,6 @@ Current state: the complete scene set is playable, but several features are appr
 - `analysis/` — local Ghidra project, pseudocode and renders; git-ignored because it derives from proprietary files.
 - `game/` — local user-supplied game files, excluded from version control.
 
-## Handoff for the next agent
-
-1. Read [`AGENTS.md`](AGENTS.md), this README, and [`docs/plan.md`](docs/plan.md) before making changes. The plan distinguishes what is implemented from what is mapped or verified about the original.
-2. The current repository is on `main` at `3ba7dfe` (also observed at `origin/main` when this handoff was prepared). Check `git status` before work and preserve any local user data.
-3. For app changes, build with `swift build --package-path app`; see `AGENTS.md` for the app bundle and scripted snapshot workflows. A snapshot run uses a fresh in-memory profile and does not read or write the real save file.
-4. Do not run the original game, installers, or registration utilities on the host. Runtime testing of the original remains opt-in and requires the isolated VM procedure in the plan.
-5. Preserve the user's game copy and local save. `game/` and `analysis/` are git-ignored; never commit proprietary game files, extracted copyrighted assets, or generated analysis output.
-6. The previous session reported that the local save contained test progression. Its current state has not been checked here; use **Game → Reset Progress…** only if you want a fresh save.
-
 ## License and game rights
 
 The independently authored source code and tools in this repository are licensed under the **GNU General Public License, version 3 only** (GPL-3.0-only); see [`LICENSE`](LICENSE). This license does not cover Reader Rabbit Preschool or grant rights to its code, data, artwork, audio, text, or other game-derived material. The project is independent and is not affiliated with or endorsed by the game's rights holders. See [`RIGHTS_AND_LICENSES.md`](RIGHTS_AND_LICENSES.md) for the boundary and handling guidance.
