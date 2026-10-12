@@ -165,7 +165,7 @@ A marching band has gaps in its line-up, and the child fills them so a colour, a
   - Counting Club's used-content bitmask mixes index scales.
   - Shape Shack's level-0 order list has 20 entries for 19 rows.
   - Pattern Parade's level-0 rows 36–43 look unreachable.
-- **Unmapped scenes:** the bonus-area games, sign-in 30200, scene 30300 (`FUN_0041af24`, unreferenced), the intro and finale, and the uses of SPEECH 20000–20098 and 22000–22259.
+- **Original behavior with incomplete mapping:** sign-in scene 30200 is not mapped and is not implemented in the port (the port currently has one player). Scene 30300 (`FUN_0041af24`) remains unreferenced and unexplained. The intro/title/carousel, finale/credits, parent menu, and bonus areas now have port implementations, but that does not mean every original branch or resource use has been reverse-engineered. The uses of SPEECH 20000–20098 and 22000–22259 remain to be characterized.
 - **Unknown fields:** a few player-record fields (`+0xc`, `+0x20`, `+0x8a`, `+0x92–0xa5`) and roster state −2.
 - **Unextracted resources:** dialog resources inside the EXE (`0xbc7`, `0xbdb`, `0xbe0`, `0xbea`, `0x3a7`, 2000–2003).
 

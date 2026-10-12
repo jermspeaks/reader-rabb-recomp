@@ -1,12 +1,12 @@
 # Reader Rabbit Preschool for macOS
 
-This project aims to reverse-engineer Reader Rabbit Preschool and ultimately port the game to macOS. The work is staged: first establish how the original program and its data work, then design and build a compatible macOS implementation. The investigation plan and evidence requirements are in the [plan](docs/plan.md).
+This repository contains a native Swift/AppKit macOS port of Reader Rabbit Preschool, alongside static-analysis notes and read-only tools for understanding the original game. The playable port is complete across the intro, menu, four activities, bonus areas, parent menu, and finale; follow-up work and investigation gaps are tracked in the [plan](docs/plan.md).
 
 > **Bring your own game copy.** This repository does not include Reader Rabbit Preschool or its proprietary game files. You must provide your own legally obtained copy of the game. The local `game/` directory is intentionally excluded from Git; do not commit the game, extracted proprietary assets, or other copyrighted payloads.
 
 ## Project status
 
-All game data formats are decoded ([`docs/formats.md`](docs/formats.md)), and the engine, scene flow and four activities are mapped, with ABC Diner traced end to end ([`docs/game-logic.md`](docs/game-logic.md)). See the task checklist in [`docs/plan.md`](docs/plan.md). No original executable has been run. A native macOS app (`app/`) runs the whole game using your own game files.
+A native macOS app (`app/`) runs the intro and title, main menu, all four activities, their exteriors and bonus areas, the parent menu, and the finale using the user's own game files. Format and original-game findings are documented in [`docs/formats.md`](docs/formats.md) and [`docs/game-logic.md`](docs/game-logic.md); remaining work and validation limits are tracked in [`docs/plan.md`](docs/plan.md). The original Windows executable has not been run.
 
 The current workspace contains a locally supplied disc copy under `game/`, including Windows executables and the `RRPDATA/*.DAT` media files. The `.MPS`, `.RSC`, `.GRP` and Smacker files belong to the autorun previews player for other titles, not to this game. The directory is ignored by Git and is not part of the repository history. Treat those file-format observations as preliminary until verified with recorded analysis evidence.
 
@@ -28,38 +28,28 @@ app/.build/debug/ReaderRabbit --snapshot --game game --out analysis/snap \
   "t 3" "click 540 100" "t 3" "shot exterior" "start game 1" "t 30" "solve" "shot diner"
 ```
 
-Current state: the whole game is playable. That covers the intro and title, the main menu, all four activities (Counting Club, ABC Diner, Shape Shack and Pattern Parade) with their exteriors and bonus areas, the parent menu (Ctrl+P), and the finale. There's a single player, with no sign-in screen yet. See the [plan](docs/plan.md) for what's left.
+Current state: the complete scene set is playable, but several features are approximations or still need polish. Known gaps include multiple-player sign-in, mouse dragging, scene transitions, some ABC Diner animations/rewards, speech verification by listening, and release packaging. Shape Shack awards credit for every completed round, matching the original code; the other activities require mistake-free rounds. See the [plan](docs/plan.md) for the tracked details.
 
 ## Repository layout
 
 - `app/` — the macOS app (Swift package): `Data/` decoders, `Engine/` game loop, actors, audio and framebuffer, `Scenes/` menu, exteriors and activities, `App/` window and headless snapshot mode.
 - `scripts/build-app.sh` — builds the `.app` bundle into `dist/` (git-ignored).
-- `docs/plan.md` — investigation stages, task checklist, setup, safety constraints and status.
+- `docs/plan.md` — implementation status, open tasks, validation notes, setup and safety constraints.
+- `AGENTS.md` — repository navigation, coding workflow, data-safety rules and validation commands.
 - `docs/formats.md` — decoded data formats, loader functions and evidence ledger.
 - `docs/game-logic.md` — engine, scene flow, activities and the ABC Diner trace.
 - `tools/` — read-only parsers and validators (`ne_resources.py`, `aseq.py`, `lips.py`, `comb.py`, `nfnt.py`), a PNG renderer for local checks (`render_aseq.py`) and a Ghidra export script.
 - `analysis/` — local Ghidra project, pseudocode and renders; git-ignored because it derives from proprietary files.
 - `game/` — local user-supplied game files, excluded from version control.
 
-## Current analysis setup
-
-The active analysis setup is on macOS ARM64:
-
-- REA MCP 6.4.0 is available in the Zed session.
-- Ghidra 12.1.4, Temurin JDK 21, and its macOS ARM64 native decompiler are installed locally.
-- REA reports its Ghidra provider as healthy. This is a static-analysis setup, not a configured Windows runtime.
-- The installed global `reverse-engineer-anything` skill is v40, while this REA package reports expecting v37. Do not run broad REA setup that would replace the newer skill. See the plan for details.
-
-These tool installations are machine-local and are not vendored in this repository. Recheck availability in the active agent session rather than assuming the same paths or tools on another machine.
-
 ## Handoff for the next agent
 
-1. Read this README and [`docs/plan.md`](docs/plan.md) before changing files or analyzing binaries.
-2. Confirm the active REA tool/provider status. Use the existing Ghidra route for static analysis; do not run the game or installers. The supplied Windows executable is not known to run natively on macOS.
-3. Begin with a read-only inventory of the user's files in `game/`, recording file identity, size, detected format, hashes, coverage, and limitations as analysis Evidence. Keep Evidence-backed observations distinct from preliminary inventory guesses.
-4. Focus first on `RRPW32.EXE`: establish its role and trace how it locates/loads scripts and resources. Follow the plan's staged approach before attempting extraction or implementation.
-5. Preserve the game copy unchanged. Keep notes, analysis tooling, and independently authored implementation code outside `game/`; never commit game files or extracted copyrighted assets.
-6. Keep the destination in view: a macOS port of the game. Do not choose a compatibility-layer, rewrite, or asset-pipeline architecture until the executable, data formats, and behavior have been investigated enough to support that decision.
+1. Read [`AGENTS.md`](AGENTS.md), this README, and [`docs/plan.md`](docs/plan.md) before making changes. The plan distinguishes what is implemented from what is mapped or verified about the original.
+2. The current repository is on `main` at `3ba7dfe` (also observed at `origin/main` when this handoff was prepared). Check `git status` before work and preserve any local user data.
+3. For app changes, build with `swift build --package-path app`; see `AGENTS.md` for the app bundle and scripted snapshot workflows. A snapshot run uses a fresh in-memory profile and does not read or write the real save file.
+4. Do not run the original game, installers, or registration utilities on the host. Runtime testing of the original remains opt-in and requires the isolated VM procedure in the plan.
+5. Preserve the user's game copy and local save. `game/` and `analysis/` are git-ignored; never commit proprietary game files, extracted copyrighted assets, or generated analysis output.
+6. The previous session reported that the local save contained test progression. Its current state has not been checked here; use **Game → Reset Progress…** only if you want a fresh save.
 
 ## Contributing and handling game data
 

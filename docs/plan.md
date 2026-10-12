@@ -6,6 +6,12 @@ Port Reader Rabbit Preschool to macOS. First, build an evidence-backed map of ho
 
 Detailed format findings are in [`formats.md`](formats.md). Game-logic findings are in [`game-logic.md`](game-logic.md).
 
+## Current status
+
+The native Swift/AppKit app is playable through the full scene set: intro/title, carousel and main menu, all four activities, exteriors, bonus areas, parent options, and the finale. The last handoff reports that scripted headless sessions checked the scene flow, each activity's level-up path, a correct and incorrect ABC Diner answer, and the 16-key finale. It also reports that the built app launched and quit cleanly. These are prior-session checks, not a fresh validation in every workspace.
+
+The port is not feature-complete or fully verified against the original. In particular, audio has not been confirmed by listening, mouse feel has not been tested in the real window, and some scenes/features remain approximations. The remaining implementation and investigation tasks are listed below; `docs/game-logic.md` distinguishes original-game questions from port gaps.
+
 ## Task checklist
 
 Status: `[x]` done · `[~]` partly done · `[ ]` not started. Each finished task points to the doc section that holds its evidence.
@@ -37,7 +43,7 @@ Status: `[x]` done · `[~]` partly done · `[ ]` not started. Each finished task
 - [x] Per-activity map: all four activities were re-derived in depth while porting them (game-logic.md §4, §8).
 - [x] Progress, keys, levels, the parent menu, and the `RRP.INI`/`RRP.DAT` save formats (game-logic.md §1.6, §3). A few record fields are still unknown.
 
-- [~] Remaining scenes mapped and ported: intro, title, story carousel, finale, credits, the four bonus areas and the parent menu. Sign-in (scene 30200) is not mapped yet.
+- [~] Scenes outside the four activities are implemented in the port: intro, title, story carousel, finale, credits, four bonus areas, and parent menu. Their original behavior is not all mapped in equal depth; sign-in (scene 30200) remains unmapped and unimplemented.
 - [x] `RRPW16.EXE` needs no analysis. The 32-bit build covers the whole game, and the port only uses its tables.
 
 ### Stage 4: End-to-end trace
@@ -61,10 +67,29 @@ Status: `[x]` done · `[~]` partly done · `[ ]` not started. Each finished task
 - [x] Intro, title and story carousel; finale and credits (keyhole with 16 keys); parent menu (Ctrl+P / ⌘P: LEVELS, info pages, case and sound); the four bonus areas.
 - [ ] Sign-in screen with multiple players (the port currently has one player).
 - [ ] Scene transition pictures (ASEQ 30510+) and the dissolve effect.
-- [ ] Engine: mouse-move and mouse-up events, so toys can be dragged in Shape Shack and Crazy Costumes (currently click to pick up, click to drop).
+- [ ] Engine/input: add mouse-move and mouse-up events for direct dragging in Shape Shack and Crazy Costumes (currently click-to-pick-up/click-to-drop; available keyboard actions vary by scene).
 - [ ] Store the gallery picture variants and the stage picture index in `PlayerProfile`.
 - [ ] ABC Diner polish: chef/customer gesture animations, food flying to the bowl, the halfway bonus show and the reward show.
-- [ ] App polish: icon, a "choose your game folder" first-run screen, and a signed/notarized build for sharing.
+- [ ] App/release polish: app icon and signed/notarized distribution build. The app already prompts for a game folder on first launch and provides **Game → Choose Game Folder…**.
+
+## Suggested next steps
+
+1. Add mouse-move and mouse-up handling to support direct dragging in Shape Shack and Crazy Costumes, then exercise the interaction in the real app.
+2. Implement the remaining scene transition pictures/effects and persist the gallery/stage selections in `PlayerProfile`.
+3. Finish ABC Diner's chef/customer gestures, food movement, halfway bonus, and reward sequence.
+4. Decide whether multiple-player sign-in is in scope; if so, map and implement original scene 30200.
+5. Listen to the identified speech clips and record what they say. The port's audio and lip sync also need a real listening check.
+6. Add release polish (icon and signing/notarization) if distribution is intended.
+
+These are priorities, not a dependency order. Keep original-game observations, port behavior, and inferred compatibility choices separately labelled.
+
+## Validation notes
+
+- The previous session reports running scripted snapshots for the full ABC Diner order (including one correct and one incorrect answer), eight perfect orders, activity level-ups, key rewards, and the finale after granting all 16 keys. It also reports a final scene-load pass after the merges.
+- Shape Shack's eight-round level-up was covered by the worker's test; the merge handoff reports separately checking a round and the toy hand-over behavior.
+- Audio was not heard and mouse feel in the real window was not tested. Headless sessions are silent and cannot validate either.
+- Snapshot mode disables `PlayerProfile` persistence and starts with a fresh profile. Earlier, pre-fix test runs reportedly altered the user's save; the previous handoff warned it contained test progression. Do not delete or reset user data automatically.
+- No original executable or installer has been run. Any original-game runtime investigation remains gated by the isolated-VM procedure below.
 
 ## Working rules
 
@@ -75,7 +100,7 @@ Status: `[x]` done · `[~]` partly done · `[ ]` not started. Each finished task
 
 ## Tooling
 
-- Host: macOS ARM64. REA 6.4.0 MCP runs through `npx`, using the npm cache at `~/.cache/rea-npm-cache`. Ghidra 12.1.4, Temurin JDK 21.0.12.1 and a locally built ARM64 native decompiler are installed under `~/.local/opt/rea/`.
+- A previous analysis session used macOS ARM64, REA 6.4.0, Ghidra 12.1.4 and Temurin JDK 21.0.12.1 from machine-local paths. These are not project dependencies; verify current availability and paths before relying on them.
 - Full decompile export (writes to `analysis/`):
 
   ```sh
@@ -85,5 +110,5 @@ Status: `[x]` done · `[~]` partly done · `[ ]` not started. Each finished task
     -postScript ExportDecomp.java "$PWD/analysis/RRPW32.decomp.c" -overwrite
   ```
 
-- The installed `reverse-engineer-anything` skill is v40, but REA 6.4.0 expects v37. Don't run the broad REA setup, because it would replace the newer skill.
+- A previous session reported a `reverse-engineer-anything` v40 / REA 6.4.0 expected-v37 mismatch. Recheck both versions before setup; avoid broad setup if it would replace a newer installed skill.
 - The Zed settings were backed up to `~/.config/zed/settings.json.rea.backup` before the `rea` MCP server was added.
