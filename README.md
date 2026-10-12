@@ -6,7 +6,7 @@ This project aims to reverse-engineer Reader Rabbit Preschool and ultimately por
 
 ## Project status
 
-All game data formats are decoded ([`docs/formats.md`](docs/formats.md)), and the engine, scene flow and four activities are mapped, with ABC Diner traced end to end ([`docs/game-logic.md`](docs/game-logic.md)). See the task checklist in [`docs/plan.md`](docs/plan.md). No original executable has been run. A native macOS app (`app/`) now runs the main menu, the activity exteriors and ABC Diner using your own game files.
+All game data formats are decoded ([`docs/formats.md`](docs/formats.md)), and the engine, scene flow and four activities are mapped, with ABC Diner traced end to end ([`docs/game-logic.md`](docs/game-logic.md)). See the task checklist in [`docs/plan.md`](docs/plan.md). No original executable has been run. A native macOS app (`app/`) runs the whole game using your own game files.
 
 The current workspace contains a locally supplied disc copy under `game/`, including Windows executables and the `RRPDATA/*.DAT` media files. The `.MPS`, `.RSC`, `.GRP` and Smacker files belong to the autorun previews player for other titles, not to this game. The directory is ignored by Git and is not part of the repository history. Treat those file-format observations as preliminary until verified with recorded analysis evidence.
 
@@ -28,7 +28,7 @@ app/.build/debug/ReaderRabbit --snapshot --game game --out analysis/snap \
   "t 3" "click 540 100" "t 3" "shot exterior" "start game 1" "t 30" "solve" "shot diner"
 ```
 
-Current state: the main menu, the four activity exteriors and ABC Diner are playable. Counting Club, Shape Shack, Pattern Parade and the bonus areas show placeholders. See the [plan](docs/plan.md) for what's left.
+Current state: the whole game is playable. That covers the intro and title, the main menu, all four activities (Counting Club, ABC Diner, Shape Shack and Pattern Parade) with their exteriors and bonus areas, the parent menu (Ctrl+P), and the finale. There's a single player, with no sign-in screen yet. See the [plan](docs/plan.md) for what's left.
 
 ## Repository layout
 

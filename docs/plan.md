@@ -34,11 +34,11 @@ Status: `[x]` done · `[~]` partly done · `[ ]` not started. Each finished task
 - [x] Scene system and full scene flow (game-logic.md §1.2, §2).
 - [x] Actors, drawing and hit testing (game-logic.md §1.3).
 - [x] Audio mixer, music and lip sync (game-logic.md §1.4).
-- [~] Per-activity map: all four activities' handlers, scenes and ID ranges are mapped (game-logic.md §2–4). Counting Club, Shape Shack and Pattern Parade rules come from a single pass and need the same depth of checking ABC Diner got.
+- [x] Per-activity map: all four activities were re-derived in depth while porting them (game-logic.md §4, §8).
 - [x] Progress, keys, levels, the parent menu, and the `RRP.INI`/`RRP.DAT` save formats (game-logic.md §1.6, §3). A few record fields are still unknown.
 
-- [ ] Map the remaining scenes: the bonus areas (gallery, waterfall, stage, Crazy Costumes), sign-in, intro and finale.
-- [ ] Decide whether `RRPW16.EXE` needs any analysis. It may not, since the 32-bit build covers the same game.
+- [~] Remaining scenes mapped and ported: intro, title, story carousel, finale, credits, the four bonus areas and the parent menu. Sign-in (scene 30200) is not mapped yet.
+- [x] `RRPW16.EXE` needs no analysis. The 32-bit build covers the whole game, and the port only uses its tables.
 
 ### Stage 4: End-to-end trace
 
@@ -55,10 +55,14 @@ Status: `[x]` done · `[~]` partly done · `[ ]` not started. Each finished task
 - [x] Engine: DAT/NE loader, ASEQ/RRGB/NFNT/COMB/LIPS/WAVE decoding, 640×480 indexed framebuffer, actor step scripts, 8 fps tick, two-channel audio with lip sync, scene switching, saved progress.
 - [x] Main menu and the four activity exteriors, driven by their COMB layouts (actors, hotspots, speech cues, host introductions, keys and carousel).
 - [x] ABC Diner playable: orders, cupboards, serving, right/wrong feedback, ticket, recap, progress meter, key and level-up.
-- [ ] Counting Club.
-- [ ] Shape Shack.
-- [ ] Pattern Parade.
-- [ ] Remaining scenes: intro and title, sign-in (multiple players), parent menu (LEVELS and info pages), bonus areas, finale and credits, scene transition pictures and effects.
+- [x] Counting Club (all four levels, dancer and finale shows).
+- [x] Shape Shack (levels 0–1 hand-over sorting, levels 2–3 free grouping; runs at 60 fps like the original).
+- [x] Pattern Parade (levels 0–3, band march and celebration shows).
+- [x] Intro, title and story carousel; finale and credits (keyhole with 16 keys); parent menu (Ctrl+P / ⌘P: LEVELS, info pages, case and sound); the four bonus areas.
+- [ ] Sign-in screen with multiple players (the port currently has one player).
+- [ ] Scene transition pictures (ASEQ 30510+) and the dissolve effect.
+- [ ] Engine: mouse-move and mouse-up events, so toys can be dragged in Shape Shack and Crazy Costumes (currently click to pick up, click to drop).
+- [ ] Store the gallery picture variants and the stage picture index in `PlayerProfile`.
 - [ ] ABC Diner polish: chef/customer gesture animations, food flying to the bowl, the halfway bonus show and the reward show.
 - [ ] App polish: icon, a "choose your game folder" first-run screen, and a signed/notarized build for sharing.
 

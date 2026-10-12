@@ -184,3 +184,14 @@ The port in `app/` re-implements the engine described above. It doesn't emulate 
 | LIPS polling | `LipSync`: one mouth value per tick, routed to the actor named in the LIPS header |
 | `RRP.DAT` player records | `PlayerProfile` JSON, indexed in menu order (the save-file order trap doesn't apply) |
 | Tables in `RRPW32.EXE` (food names, orders) | `ExeTables` reads them from the user's EXE at runtime |
+
+## 8. Corrections found while porting
+
+The porting passes re-derived each activity from the decompiled code. These findings correct or extend §3–4:
+
+- **Shape Shack credits every finished round.** The "three or more misses means no credit" test at `0x41f6b8` sits behind an unconditional jump (`eb 0a` at `0x41f6b6`) and never runs; the miss counter `0x447dea` is written but never read. The level-0 order list really does lose its 20th entry (`FUN_0041f7d0`). Shape Shack runs at 60 fps (`FUN_004339a4(0x3c)`), and its logic acts every 7th tick.
+- **Counting Club:** at level 0, wrong trees never open. The child confirms the count by clicking the host (or pressing Enter), not a tree. Level 3 accepts any total. The suspected used-content bitmask bug is real: two set bits in a group set all three. The port reproduces it.
+- **Pattern Parade:** the group to choose from sits on the bench at the top, and the line is at the bottom. Level-1 type 0x400 alternates instruments (cymbals and drums), not animals. Rows 36–43 are unreachable, and the level-0 queue drops its 8th entry after the first round. On the exterior, the drum major's animation (layout ids 2840/2841) ends by marching into the game.
+- **Shared rule (§3) needs this qualification:** "only mistake-free rounds count" holds for ABC Diner, Counting Club and Pattern Parade, but not for Shape Shack.
+
+The detailed per-scene notes are in the scene sources (`app/Sources/ReaderRabbit/Scenes/`). Each function cites the original address it re-implements.
