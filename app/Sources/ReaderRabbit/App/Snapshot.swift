@@ -50,6 +50,10 @@ enum Snapshot {
                 game.render()
                 write(game.fb.makeImage(), to: out.appendingPathComponent("\(p[1]).png"))
                 print("shot \(p[1]) scene=\(type(of: game.scene!)) tick=\(game.tickCount)")
+            case "keys":
+                // Grant every key (`keys all`) or none (`keys none`).
+                let on = p.count > 1 && p[1] == "all"
+                game.player.keys = Array(repeating: Array(repeating: on, count: 4), count: 4)
             case "start":
                 // Jump straight to a scene: start menu | intro | finale | parent |
                 // ext N | game N | bonus N (menu-order activity index).

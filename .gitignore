@@ -227,3 +227,6 @@ __marimo__/
 # Swift / app build output
 /app/.build/
 /dist/
+
+# Agent worktrees
+/.claude/worktrees/

@@ -47,6 +47,11 @@ final class GameView: NSView {
             game.toggleSound()
             return
         }
+        // Ctrl+P opens the parent options, as in the original (key code 0x10).
+        if event.modifierFlags.contains(.control), event.charactersIgnoringModifiers == "p" {
+            game.change(to: ParentMenuScene())
+            return
+        }
         switch event.keyCode {
         case 53: game.keyDown(.escape)
         case 36, 76: game.keyDown(.enter)
