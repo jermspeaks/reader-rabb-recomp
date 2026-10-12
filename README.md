@@ -6,14 +6,17 @@ This project aims to reverse-engineer Reader Rabbit Preschool and ultimately por
 
 ## Project status
 
-Preparation is complete; game analysis and port implementation have not started. No original executable has been run, and no proprietary media has been extracted or modified. The plan describes the current inventory observations, safety boundaries, and staged investigation.
+The first static-analysis pass is complete; see [`docs/formats.md`](docs/formats.md). The game's media containers, audio, sprite/animation images, and palettes are decoded. The next step is mapping the game's scene and activity logic in `RRPW32.EXE`. No original executable has been run, and port implementation has not started.
 
-The current workspace contains a locally supplied disc copy under `game/`, including Windows executables, data and asset archives, Smacker video, and readable `.MPS` puzzle scripts. The directory is ignored by Git and is not part of the repository history. Treat those file-format observations as preliminary until verified with recorded analysis evidence.
+The current workspace contains a locally supplied disc copy under `game/`, including Windows executables and the `RRPDATA/*.DAT` media files. The `.MPS`, `.RSC`, `.GRP` and Smacker files belong to the autorun previews player for other titles, not to this game. The directory is ignored by Git and is not part of the repository history. Treat those file-format observations as preliminary until verified with recorded analysis evidence.
 
 ## Repository layout
 
 - `docs/reverse-engineering-plan.md` — investigation stages, current setup, safety constraints, and next actions.
-- `scan_graphic_signatures.py` — preliminary graphic-signature scanner; it is not a complete `.DAT` parser.
+- `docs/formats.md` — decoded data formats, loader functions and evidence ledger.
+- `tools/` — read-only parsers (`ne_resources.py`, `aseq.py`), a PNG renderer for local checks (`render_aseq.py`) and a Ghidra export script.
+- `scan_graphic_signatures.py` — early signature scanner, superseded by `tools/`.
+- `analysis/` — local Ghidra project, pseudocode and renders; git-ignored because it derives from proprietary files.
 - `game/` — local user-supplied game files, excluded from version control.
 
 ## Current analysis setup

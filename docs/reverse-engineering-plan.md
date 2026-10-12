@@ -38,8 +38,20 @@ These are filesystem observations, not REA analysis Evidence:
 - The REA package expects skill version 37, but the installed global skill is version 40. This mismatch is recorded and intentionally left unchanged to avoid replacing the newer skill; it has not prevented the MCP tools from appearing in the active session.
 - **Game analysis has not begun.** No game binary has been executed or opened in an analysis provider, and no proprietary media has been extracted or modified.
 
+## Progress (2026-10-12, first analysis pass)
+
+Format findings and evidence are in [`formats.md`](formats.md). In summary:
+
+- **Stage 1 (identity and boundaries) is done.** SHA-256 hashes were recorded for the key files. `RRPW32.EXE` and the four `RRPDATA/*.DAT` files make up the game. The `.MPS`/`.RSC`/`.GRP`/`.SMK` files belong to the installer's autorun **previews** player for other TLC titles. This corrects the earlier assumption that the `.MPS` scripts were this game's puzzle scripts.
+- **The DAT files are NE resource-only modules.** `RRPW32.EXE` opens and parses them itself, and looks up resources by (FourCC tag, numeric ID).
+- **Every audio resource is a plain 8-bit mono PCM WAV.**
+- **Images and palettes are decoded.** `ASEQ` sprite/animation frames use a simple per-row RLE, validated on all 1572 resources. `RRGB` palettes are 256 × Mac `RGBColor` entries. Backgrounds render correctly.
+- **The engine probably originated on the Mac** (NFNT fonts, Mac Roman text, and a byte-swap path), which bodes well for a macOS port.
+- No game binary has been executed. Rendered images and the Ghidra project/pseudocode stay in the git-ignored `analysis/` directory.
+
 ## Next actions
 
-1. Use REA's read-only artifact inventory on the selected files under `game/`; record digests, sizes, formats, and coverage in Evidence. Do not commit game payloads or generated proprietary media.
-2. Start with `RRPW32.EXE` using Ghidra, then establish executable responsibilities and launch/configuration paths from static evidence before inspecting custom data formats.
-3. Keep all analysis claims linked to Evidence and explicitly label inferred format details. Runtime execution remains a separate decision; the current setup supplies static analysis only and does not establish a safe or functioning Windows execution environment.
+1. Decode the remaining graphic types: `ASEQ` sequence-step fields (timing and offsets), `LIPS` (lip sync against SPEECH IDs), `COMB` (likely hit regions), and `NFNT` glyph bitmaps.
+2. Map scene structure in `RRPW32.EXE`: the main loop, the scene/activity state machine, and how the four activities (Counting Club, ABC Diner, Shape Shack, Pattern Parade) choose resource IDs, levels, and progress. Start from callers of `FUN_0043462a` (ASEQ load) and `FUN_00437c07` (palette load), plus the progress-report and `LEVELS` strings.
+3. Trace one activity (ABC Diner, scene 2200) end to end, as in stage 4.
+4. Decide the port architecture after step 2. Because the media formats are already decodable, a native macOS re-implementation that reads the original DAT files at runtime, or a dedicated asset-conversion step, looks feasible. A compatibility layer may not be necessary.
