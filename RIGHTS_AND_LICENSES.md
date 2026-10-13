@@ -10,7 +10,7 @@ This is an independent project and is not affiliated with or endorsed by the own
 
 The repository does not include the original game files or extracted game assets. Users must supply their own legally obtained copy. Do not commit, publish, or distribute original game files, extracted assets, or generated app bundles that contain game-derived material. Users are responsible for ensuring their own use of their copy and any locally generated build complies with applicable law and the rights holder's terms.
 
-The current app reads game data from the user's selected game folder at runtime. A future task tracks generating a self-contained app with the full runtime asset set from a user's own game copy; that work must keep generated game content local to the user and out of source control and public releases.
+The app can read game data from the user's selected folder at runtime. The local build script also accepts `--game DIR` and embeds the four runtime DAT/DLL files plus `RRPW32.EXE` (used only as a data source for game tables) into the generated app. The generated app therefore contains proprietary game-derived content even though the user supplied the source copy. Keep it local in the git-ignored `dist/` directory; do not commit, publish, or distribute it. Users remain responsible for ensuring their copy, build, and use comply with applicable law and the rights holder's terms. This project does not provide legal advice or grant permission to redistribute game content.
 
 ## Third-party material
 

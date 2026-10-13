@@ -65,13 +65,13 @@ Status: `[x]` done · `[~]` partly done · `[ ]` not started. Each finished task
 - [x] Shape Shack (levels 0–1 hand-over sorting, levels 2–3 free grouping; runs at 60 fps like the original).
 - [x] Pattern Parade (levels 0–3, band march and celebration shows).
 - [x] Intro, title and story carousel; finale and credits (keyhole with 16 keys); parent menu (Ctrl+P / ⌘P: LEVELS, info pages, case and sound); the four bonus areas.
+- [x] Build-time user asset packaging: `./scripts/build-app.sh --game DIR` checks for and embeds the four runtime DAT/DLL files and `RRPW32.EXE` (read only for its data tables) in the local app, which uses those embedded files by default. `dist/` stays git-ignored; the generated app contains copyrighted game-derived content and must remain personal, not committed or distributed. Users are responsible for their rights to make and use the build; see README and RIGHTS_AND_LICENSES.md.
 - [ ] Sign-in screen with multiple players (the port currently has one player).
 - [ ] Scene transition pictures (ASEQ 30510+) and the dissolve effect.
 - [ ] Engine/input: add mouse-move and mouse-up events for direct dragging in Shape Shack and Crazy Costumes (currently click-to-pick-up/click-to-drop; available keyboard actions vary by scene).
 - [ ] Store the gallery picture variants and the stage picture index in `PlayerProfile`.
 - [ ] ABC Diner polish: chef/customer gesture animations, food flying to the bowl, the halfway bonus show and the reward show.
 - [ ] App/release polish: app icon and signed/notarized distribution build. The app already prompts for a game folder on first launch and provides **Game → Choose Game Folder…**.
-- [ ] Build-time user asset packaging: let a user provide their own game copy and generate a self-contained app with the full runtime game-asset set embedded, so the installed app no longer needs a separate game folder. Keep original files, extracted assets, and generated bundles containing game-derived content out of the repository and public releases; assess licensing and build-path implications before implementation.
 
 ## Suggested next steps
 
@@ -81,7 +81,7 @@ Status: `[x]` done · `[~]` partly done · `[ ]` not started. Each finished task
 4. Decide whether multiple-player sign-in is in scope; if so, map and implement original scene 30200.
 5. Listen to the identified speech clips and record what they say. The port's audio and lip sync also need a real listening check.
 6. Add release polish (icon and signing/notarization) if distribution is intended.
-7. Plan a build-time workflow that embeds the full runtime asset set from a user's own game copy in that user's generated app. This is future work only; do not add or distribute game assets as part of the repository.
+7. For a self-contained local build, run `./scripts/build-app.sh --game DIR` with a legally obtained game folder; keep the resulting app personal and out of source control and public releases.
 
 These are priorities, not a dependency order. Keep original-game observations, port behavior, and inferred compatibility choices separately labelled.
 

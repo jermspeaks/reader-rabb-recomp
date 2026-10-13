@@ -48,6 +48,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             let u = URL(fileURLWithPath: saved)
             if ResourceStore.looksLikeGame(u) { return u }
         }
+        if let resources = Bundle.main.resourceURL {
+            let embedded = resources.appendingPathComponent("GameData", isDirectory: true)
+            if ResourceStore.looksLikeGame(embedded) { return embedded }
+        }
         return askForFolder()
     }
 
@@ -72,7 +76,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     }
 
     @objc private func chooseFolder(_ sender: Any?) {
-        UserDefaults.standard.removeObject(forKey: Self.folderKey)
+        guard let folder = askForFolder() else { return }
+        UserDefaults.standard.set(folder.path, forKey: Self.folderKey)
         timer?.invalidate()
         game?.audio.stopSpeech()
         game?.audio.stopMusic()

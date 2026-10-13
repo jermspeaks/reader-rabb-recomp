@@ -15,11 +15,11 @@ The current workspace contains a locally supplied disc copy under `game/`, inclu
 Requires macOS 13+ and Xcode (Swift 5.10 or later).
 
 ```sh
-./scripts/build-app.sh                       # builds dist/Reader Rabbit's Preschool.app
-open "dist/Reader Rabbit's Preschool.app"     # asks for your game folder on first launch
+./scripts/build-app.sh --game ./game          # embeds your own game's runtime files in this local app
+open "dist/Reader Rabbit's Preschool.app"
 ```
 
-On first launch, choose the folder that contains `RRPDATA` (the top level of your CD or a copy of it). The choice is remembered; use **Game → Choose Game Folder…** to change it. Progress is saved to `~/Library/Application Support/ReaderRabbitPreschool/player.json`.
+Without `--game`, choose the folder that contains `RRPDATA` on first launch; the choice is remembered. With `--game DIR`, the build checks for and embeds `GRAPHIC`, `SPEECH`, `SOUNDS`, and `MUSIC` DAT/DLL files plus `RRPW32.EXE` in the generated app. The EXE is read only as data for game tables; it is not run. **Game → Choose Game Folder…** can still switch to another copy. `--output-name NAME.app` selects a different output name, still inside git-ignored `dist/`. Generated apps containing game-derived content are for your personal use and must not be committed or distributed. Progress is saved to `~/Library/Application Support/ReaderRabbitPreschool/player.json`.
 
 For development, `swift run --package-path app ReaderRabbit --game game` runs from source. A headless mode renders scripted sessions to PNG for checking (write output under `analysis/`):
 
@@ -47,7 +47,7 @@ Current state: the complete scene set is playable, but several features are appr
 
 The independently authored source code and tools in this repository are licensed under the **GNU General Public License, version 3 only** (GPL-3.0-only); see [`LICENSE`](LICENSE). This license does not cover Reader Rabbit Preschool or grant rights to its code, data, artwork, audio, text, or other game-derived material. The project is independent and is not affiliated with or endorsed by the game's rights holders. See [`RIGHTS_AND_LICENSES.md`](RIGHTS_AND_LICENSES.md) for the boundary and handling guidance.
 
-The current app reads data from the game folder you provide. A future task is to let you generate a self-contained app embedding the full runtime asset set from your own game copy; this is not implemented yet. Any locally generated app that embeds game-derived content must remain personal and must not be committed or distributed from this repository.
+The app can read data from a game folder at runtime or be built locally with `./scripts/build-app.sh --game DIR` to embed the runtime files from that user-supplied copy. The generated app includes proprietary game-derived content and is not a distributable project artifact: keep it in ignored `dist/`, do not commit or publish it, and ensure your use complies with applicable law and the rights holder's terms. This project does not determine whether a particular user's copy or use is licensed.
 
 ## Contributing and handling game data
 
