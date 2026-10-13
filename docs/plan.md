@@ -29,7 +29,7 @@ Status: `[x]` done · `[~]` partly done · `[ ]` not started. Each finished task
 - [x] `WAVE` audio in SPEECH, SOUNDS and MUSIC: plain PCM WAV (formats.md §2.2).
 - [x] `ASEQ` frame bitmaps (RLE) (formats.md §3).
 - [x] `RRGB` palettes (formats.md §4).
-- [x] `ASEQ` step scripts: x/y offset, frame, and control codes; one step per 116 ms tick (formats.md §3). A few constant fields remain unexplained.
+- [x] `ASEQ` step scripts: x/y offset, frame, and control codes; one step per 116 ms tick (formats.md §3). Some format details remain unexplained; see Stage 7.
 - [x] `LIPS`: mouth-frame tracks paired with the WAVE of the same ID (formats.md §5).
 - [x] `COMB`: scene layouts of actors, hotspots and speech cues (formats.md §6).
 - [x] `NFNT` bitmap fonts and `TEXT` layout directives (formats.md §7–8).
@@ -41,7 +41,7 @@ Status: `[x]` done · `[~]` partly done · `[ ]` not started. Each finished task
 - [x] Actors, drawing and hit testing (game-logic.md §1.3).
 - [x] Audio mixer, music and lip sync (game-logic.md §1.4).
 - [x] Per-activity map: all four activities were re-derived in depth while porting them (game-logic.md §4, §8).
-- [x] Progress, keys, levels, the parent menu, and the `RRP.INI`/`RRP.DAT` save formats (game-logic.md §1.6, §3). A few record fields are still unknown.
+- [x] Progress, keys, levels, the parent menu, and the `RRP.INI`/`RRP.DAT` save formats (game-logic.md §1.6, §3). A few record fields are still unknown; see Stage 7.
 
 - [~] Scenes outside the four activities are implemented in the port: intro, title, story carousel, player sign-in, finale, credits, four bonus areas, and parent menu. The player sign-in scene is a new port-owned roster picker; original scene 30200 remains unmapped, so visual and behavioral parity is unknown.
 - [x] `RRPW16.EXE` needs no analysis. The 32-bit build covers the whole game, and the port only uses its tables.
@@ -72,6 +72,17 @@ Status: `[x]` done · `[~]` partly done · `[ ]` not started. Each finished task
 - [x] Store gallery picture variants and the stage picture index in each `PlayerProfile`; migrate the prior gallery `UserDefaults` value and load legacy single-player JSON.
 - [~] ABC Diner polish: food flight, chef gesture commands, customer reactions, and halfway/reward ASEQ sequences are wired. Show positioning and timing are approximations pending visual comparison; see game-logic.md §8.
 - [ ] App/release polish: app icon and signed/notarized distribution build. The app already prompts for a game folder on first launch and provides **Game → Choose Game Folder…**.
+
+### Stage 7: Remaining static-analysis questions
+
+These are open research questions, not known port defects. Resolve them statically where possible; use Stage 5's isolated-VM procedure only if static evidence cannot settle a behavior and runtime evidence is needed.
+
+- [ ] Determine the meaning of the remaining format details: `ASEQ` fields `unk3`, `unk4`, frame `unk0`, version 8 vs. 30, and step `tag`; the negative-`x2` `COMB` hotspot flag; the `a` field in `TEXT`'s `&0` directive; and whether `RRPW16.EXE` uses `NFNT` 2018 (formats.md §§3, 6, 8, 10).
+- [ ] Determine whether ABC Diner permits more than one attempt per item, as the step-6 analysis suggests (game-logic.md §6).
+- [ ] Characterize the uses of `SPEECH` resources 20000–20098 and 22000–22259 (game-logic.md §6).
+- [ ] Explain the remaining player-record fields (`+0xc`, `+0x20`, `+0x8a`, `+0x92–0xa5`) and roster state −2 (game-logic.md §6).
+- [ ] Extract and identify the purpose/content of the EXE dialog resources `0xbc7`, `0xbdb`, `0xbe0`, `0xbea`, `0x3a7`, and 2000–2003 (game-logic.md §6).
+- [ ] Investigate unreferenced scene 30300 / `FUN_0041af24` (game-logic.md §6).
 
 ## Suggested next steps
 

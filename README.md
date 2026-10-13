@@ -8,7 +8,7 @@ This repository contains a native Swift/AppKit macOS port of Reader Rabbit Presc
 
 A native macOS app (`app/`) runs the intro and title, main menu, all four activities, their exteriors and bonus areas, the parent menu, and the finale using the user's own game files. Format and original-game findings are documented in [`docs/formats.md`](docs/formats.md) and [`docs/game-logic.md`](docs/game-logic.md); remaining work and validation limits are tracked in [`docs/plan.md`](docs/plan.md). The original Windows executable has not been run.
 
-The current workspace contains a locally supplied disc copy under `game/`, including Windows executables and the `RRPDATA/*.DAT` media files. The `.MPS`, `.RSC`, `.GRP` and Smacker files belong to the autorun previews player for other titles, not to this game. The directory is ignored by Git and is not part of the repository history. Treat those file-format observations as preliminary until verified with recorded analysis evidence.
+This checkout currently has no game files in `game/`; provide your own legally obtained copy to run the app or its asset-backed checks. The `.MPS`, `.RSC`, `.GRP` and Smacker files, if present on a supplied disc, belong to the autorun previews player for other titles, not to this game. The `game/` directory is ignored by Git. Static-analysis findings and parser-validation status are documented in [`docs/formats.md`](docs/formats.md), with unresolved questions and inferences called out there.
 
 ## Running the macOS app
 

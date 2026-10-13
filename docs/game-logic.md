@@ -161,10 +161,7 @@ A marching band has gaps in its line-up, and the child fills them so a colour, a
 
 - **Speech content:** what the clips actually say; there are no transcripts. For example, are SOUNDS 6800–6851 alternating letter names (even) and letter sounds (odd)? Answering this needs listening, not more code analysis.
 - **ABC Diner attempts:** whether each item really allows only one attempt, as step 6 suggests.
-- **Three suspected original-game bugs** (useful for deciding whether a port reproduces them):
-  - Counting Club's used-content bitmask mixes index scales.
-  - Shape Shack's level-0 order list has 20 entries for 19 rows.
-  - Pattern Parade's level-0 rows 36–43 look unreachable.
+
 - **Original behavior with incomplete mapping:** sign-in scene 30200 is still not mapped. The port substitutes its own roster picker (`PlayerSignInScene`) with an AppKit add-name prompt and per-profile progress; this is an implementation choice, not an observed recreation of the original screen. Scene 30300 (`FUN_0041af24`) remains unreferenced and unexplained. The intro/title/carousel, finale/credits, parent menu, and bonus areas have port implementations, but that does not mean every original branch or resource use has been reverse-engineered. The uses of SPEECH 20000–20098 and 22000–22259 remain to be characterized.
 - **Unknown fields:** a few player-record fields (`+0xc`, `+0x20`, `+0x8a`, `+0x92–0xa5`) and roster state −2.
 - **Unextracted resources:** dialog resources inside the EXE (`0xbc7`, `0xbdb`, `0xbe0`, `0xbea`, `0x3a7`, 2000–2003).
