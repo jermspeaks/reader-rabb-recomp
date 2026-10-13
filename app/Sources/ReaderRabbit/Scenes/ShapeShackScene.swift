@@ -191,7 +191,7 @@ final class ShapeShackScene: Scene {
     }
 
     func exit(_ game: Game) {
-        game.player.save()
+        game.savePlayer()
     }
 
     private func loadTables(_ exe: ExeTables) {
@@ -977,7 +977,7 @@ final class ShapeShackScene: Scene {
         guard game.player.progress[act] < 8 else { return }
         game.player.progress[act] += 1
         let p = game.player.progress[act]
-        game.player.save()
+        game.savePlayer()
         game.say(25000 + (p + 1) / 2)
         progressNow = p
         if p > 7 { levelDone = true }
@@ -1010,7 +1010,7 @@ final class ShapeShackScene: Scene {
         lastSoundStep = -1
         let act = Activity.shapeShack.rawValue
         game.player.completeLevel(act)
-        game.player.save()
+        game.savePlayer()
         state = 0x25
     }
 

@@ -28,7 +28,7 @@ app/.build/debug/ReaderRabbit --snapshot --game game --out analysis/snap \
   "t 3" "click 540 100" "t 3" "shot exterior" "start game 1" "t 30" "solve" "shot diner"
 ```
 
-Current state: the complete scene set is playable, but several features are approximations or still need polish. Direct mouse dragging is implemented in Shape Shack and Crazy Costumes but still needs real-window testing. ABC Diner now includes food-flight, chef/customer reaction, halfway-show, and reward-show sequences; their timing and placement still need comparison against the supplied game assets. Other gaps include multiple-player sign-in, scene transitions, speech verification by listening, and release packaging. Shape Shack awards credit for every completed round, matching the original code; the other activities require mistake-free rounds. See the [plan](docs/plan.md) for tracked details.
+Current state: the complete scene set is playable, but several features are approximations or still need polish. Direct mouse dragging is implemented in Shape Shack and Crazy Costumes; Crazy Costumes drop targeting was tightened, but its real-window feel still needs testing. The port now has a multi-player roster and sign-in picker; this is a port-owned replacement because original sign-in scene 30200 remains unmapped. ABC Diner includes food-flight, chef/customer reaction, halfway-show, and reward-show sequences; their timing and placement need comparison against the supplied game assets. Other gaps include scene transitions, speech verification by listening, and release packaging. Shape Shack awards credit for every completed round, matching the original code; the other activities require mistake-free rounds. See the [plan](docs/plan.md) for tracked details.
 
 ## Repository layout
 

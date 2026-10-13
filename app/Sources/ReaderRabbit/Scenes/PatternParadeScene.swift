@@ -176,7 +176,7 @@ final class PatternParadeScene: Scene {
 
     func exit(_ game: Game) {
         game.stopSpeech()
-        game.player.save()
+        game.savePlayer()
         Self.introIndex = game.random(3) + 1
     }
 
@@ -632,7 +632,7 @@ final class PatternParadeScene: Scene {
                 state = .demo
             } else {
                 game.player.completeLevel(Self.act)
-                game.player.save()
+                game.savePlayer()
                 state = .waitCut
                 game.change(to: MainMenuScene(greet: false), sound: exitSpeech[game.random(exitSpeech.count)])
             }
@@ -742,7 +742,7 @@ final class PatternParadeScene: Scene {
     private func incrementProgress(_ game: Game) -> Int {
         let p = game.player.progress[Self.act] + 1
         game.player.progress[Self.act] = p
-        game.player.save()
+        game.savePlayer()
         if p > 0 && p < 9 { game.say(25000 + (p + 1) / 2) }
         return p
     }

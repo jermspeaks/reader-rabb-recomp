@@ -8,9 +8,9 @@ Detailed format findings are in [`formats.md`](formats.md). Game-logic findings 
 
 ## Current status
 
-The native Swift/AppKit app is playable through the full scene set: intro/title, carousel and main menu, all four activities, exteriors, bonus areas, parent options, and the finale. The last handoff reports that scripted headless sessions checked the scene flow, each activity's level-up path, a correct and incorrect ABC Diner answer, and the 16-key finale. It also reports that the built app launched and quit cleanly. These are prior-session checks, not a fresh validation in every workspace.
+The native Swift/AppKit app is playable through the full scene set: intro/title, carousel, player sign-in, main menu, all four activities, exteriors, bonus areas, parent options, and the finale. The last handoff reports that scripted headless sessions checked the scene flow, each activity's level-up path, a correct and incorrect ABC Diner answer, and the 16-key finale. It also reports that the built app launched and quit cleanly. These are prior-session checks, not a fresh validation in every workspace.
 
-The port is not feature-complete or fully verified against the original. In particular, audio has not been confirmed by listening, mouse feel has not been tested in the real window, and some scenes/features remain approximations. The remaining implementation and investigation tasks are listed below; `docs/game-logic.md` distinguishes original-game questions from port gaps.
+The port is not feature-complete or fully verified against the original. In particular, audio has not been confirmed by listening, Crazy Costumes pointer dragging still needs real-window confirmation, and some scenes/features remain approximations. The player picker and roster are port-owned compatibility features; the original sign-in layout and behavior remain unmapped. The remaining implementation and investigation tasks are listed below; `docs/game-logic.md` distinguishes original-game questions from port gaps.
 
 ## Task checklist
 
@@ -43,7 +43,7 @@ Status: `[x]` done · `[~]` partly done · `[ ]` not started. Each finished task
 - [x] Per-activity map: all four activities were re-derived in depth while porting them (game-logic.md §4, §8).
 - [x] Progress, keys, levels, the parent menu, and the `RRP.INI`/`RRP.DAT` save formats (game-logic.md §1.6, §3). A few record fields are still unknown.
 
-- [~] Scenes outside the four activities are implemented in the port: intro, title, story carousel, finale, credits, four bonus areas, and parent menu. Their original behavior is not all mapped in equal depth; sign-in (scene 30200) remains unmapped and unimplemented.
+- [~] Scenes outside the four activities are implemented in the port: intro, title, story carousel, player sign-in, finale, credits, four bonus areas, and parent menu. The player sign-in scene is a new port-owned roster picker; original scene 30200 remains unmapped, so visual and behavioral parity is unknown.
 - [x] `RRPW16.EXE` needs no analysis. The 32-bit build covers the whole game, and the port only uses its tables.
 
 ### Stage 4: End-to-end trace
@@ -66,19 +66,19 @@ Status: `[x]` done · `[~]` partly done · `[ ]` not started. Each finished task
 - [x] Pattern Parade (levels 0–3, band march and celebration shows).
 - [x] Intro, title and story carousel; finale and credits (keyhole with 16 keys); parent menu (Ctrl+P / ⌘P: LEVELS, info pages, case and sound); the four bonus areas.
 - [x] Build-time user asset packaging: `./scripts/build-app.sh --game DIR` checks for and embeds the four runtime DAT/DLL files and `RRPW32.EXE` (read only for its data tables) in the local app, which uses those embedded files by default. `dist/` stays git-ignored; the generated app contains copyrighted game-derived content and must remain personal, not committed or distributed. Users are responsible for their rights to make and use the build; see README and RIGHTS_AND_LICENSES.md.
-- [ ] Sign-in screen with multiple players (the port currently has one player).
+- [~] Multiple-player sign-in: the port has a player picker, add-player prompt, and per-player progress roster with legacy single-player save migration. The UI is an inferred replacement; original scene 30200 remains unmapped and real-window interaction needs validation.
 - [ ] Scene transition pictures (ASEQ 30510+) and the dissolve effect.
 - [~] Engine/input: mouse-move and mouse-up now support direct dragging in Shape Shack and Crazy Costumes; click-to-pick-up/click-to-drop and keyboard alternatives remain. Real-window feel still needs testing.
-- [ ] Store the gallery picture variants and the stage picture index in `PlayerProfile`.
+- [x] Store gallery picture variants and the stage picture index in each `PlayerProfile`; migrate the prior gallery `UserDefaults` value and load legacy single-player JSON.
 - [~] ABC Diner polish: food flight, chef gesture commands, customer reactions, and halfway/reward ASEQ sequences are wired. Show positioning and timing are approximations pending visual comparison; see game-logic.md §8.
 - [ ] App/release polish: app icon and signed/notarized distribution build. The app already prompts for a game folder on first launch and provides **Game → Choose Game Folder…**.
 
 ## Suggested next steps
 
-1. Exercise direct dragging in Shape Shack and Crazy Costumes in the real app; refine pointer feel if needed.
-2. Implement the remaining scene transition pictures/effects and persist the gallery/stage selections in `PlayerProfile`.
+1. Re-test direct dragging in Shape Shack and Crazy Costumes in the real app, especially Crazy Costumes' release-on-target behavior; refine pointer feel if needed.
+2. Implement the remaining scene transition pictures/effects and visually validate the persisted gallery/stage selections.
 3. Compare ABC Diner's gestures, food movement, halfway bonus, and reward sequence against the supplied game assets; refine the current approximations.
-4. Decide whether multiple-player sign-in is in scope; if so, map and implement original scene 30200.
+4. Validate multi-player creation, switching, legacy-save migration, and profile isolation in the real app. Map original scene 30200 only if original parity is required.
 5. Listen to the identified speech clips and record what they say. The port's audio and lip sync also need a real listening check.
 6. Add release polish (icon and signing/notarization) if distribution is intended.
 7. For a self-contained local build, run `./scripts/build-app.sh --game DIR` with a legally obtained game folder; keep the resulting app personal and out of source control and public releases.
@@ -89,9 +89,9 @@ These are priorities, not a dependency order. Keep original-game observations, p
 
 - The previous session reports running scripted snapshots for the full ABC Diner order (including one correct and one incorrect answer), eight perfect orders, activity level-ups, key rewards, and the finale after granting all 16 keys. It also reports a final scene-load pass after the merges.
 - Shape Shack's eight-round level-up was covered by the worker's test; the merge handoff reports separately checking a round and the toy hand-over behavior.
-- Audio was not heard and mouse feel in the real window was not tested. Headless sessions are silent and cannot validate either. The current workspace has no `game/` data, so Diner asset positioning and the new drag paths could not be exercised here.
+- Audio was not heard and Crazy Costumes mouse feel in the real window was not tested. Headless sessions are silent and cannot validate either. The current workspace has no `game/` data, so Diner asset positioning, costume pointer drag/drop, and the sign-in screen with game artwork could not be exercised here.
 - Snapshot mode disables `PlayerProfile` persistence and starts with a fresh profile. Earlier, pre-fix test runs reportedly altered the user's save; the previous handoff warned it contained test progression. Do not delete or reset user data automatically.
-- This change's Swift package build and diff checks passed. No scripted gameplay snapshot or real-window interaction was run because the local `game/` directory is empty.
+- `swift build --package-path app` and `git diff --check` passed after the current implementation. No gameplay snapshot or real-window interaction was run because the local `game/` directory is empty.
 - No original executable or installer has been run. Any original-game runtime investigation remains gated by the isolated-VM procedure below.
 
 ## Working rules

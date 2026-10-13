@@ -286,7 +286,7 @@ final class TitleScene: SlideshowScene {
     override func next(_ game: Game, skip: Bool) {
         if skip {
             game.stopSpeech()
-            game.change(to: MainMenuScene())
+            game.change(to: PlayerSignInScene())
         } else {
             closeIris { game.change(to: StoryCarouselScene()) }
         }
@@ -331,9 +331,9 @@ final class StoryCarouselScene: SlideshowScene {
     override func next(_ game: Game, skip: Bool) {
         if skip {
             game.stopSpeech()
-            game.change(to: MainMenuScene())
+            game.change(to: PlayerSignInScene())
         } else {
-            closeIris { game.change(to: MainMenuScene()) }
+            closeIris { game.change(to: PlayerSignInScene()) }
         }
     }
 }

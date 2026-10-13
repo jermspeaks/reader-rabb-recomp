@@ -178,7 +178,7 @@ final class CountingClubScene: Scene {
         phase = .waitCut
     }
 
-    func exit(_ game: Game) { game.player.save() }
+    func exit(_ game: Game) { game.savePlayer() }
 
     private func loadTables(_ game: Game) {
         guard let exe = game.exe else {
@@ -827,7 +827,7 @@ final class CountingClubScene: Scene {
             p += 1
             game.player.progress[Self.act] = p
             if p > 0, p < 9 { clicked = -1; game.say(25000 + (p + 1) / 2) }
-            game.player.save()
+            game.savePlayer()
             levelDone = p > 7
         }
         guard credited, p == 4 || p >= 8 else { nextRound(game); return }
@@ -901,7 +901,7 @@ final class CountingClubScene: Scene {
     private func finishLevel(_ game: Game) {
         phase = .leaving
         game.player.completeLevel(Self.act)
-        game.player.save()
+        game.savePlayer()
         game.change(to: MainMenuScene(greet: false),
                     sound: Self.exitSpeech[game.random(Self.exitSpeech.count)])
     }

@@ -47,6 +47,37 @@ struct PlayerProfile: Codable {
     var keys = Array(repeating: Array(repeating: false, count: 4), count: 4)
     var usedContent = [[Int]](repeating: [], count: 4)
     var endingSeen = false
+    var galleryPictureVariants = [0, 0, 0, 0, 0]
+    var stagePictureIndex = 0
+
+    private enum CodingKeys: String, CodingKey {
+        case name, lowercase, soundOn, level, progress, keys, usedContent, endingSeen
+        case galleryPictureVariants, stagePictureIndex
+    }
+
+    init() {}
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        name = try c.decodeIfPresent(String.self, forKey: .name) ?? "Player"
+        lowercase = try c.decodeIfPresent(Bool.self, forKey: .lowercase) ?? false
+        soundOn = try c.decodeIfPresent(Bool.self, forKey: .soundOn) ?? true
+        level = try c.decodeIfPresent([Int].self, forKey: .level) ?? [0, 0, 0, 0]
+        progress = try c.decodeIfPresent([Int].self, forKey: .progress) ?? [0, 0, 0, 0]
+        keys = try c.decodeIfPresent([[Bool]].self, forKey: .keys)
+            ?? Array(repeating: Array(repeating: false, count: 4), count: 4)
+        usedContent = try c.decodeIfPresent([[Int]].self, forKey: .usedContent)
+            ?? [[Int]](repeating: [], count: 4)
+        endingSeen = try c.decodeIfPresent(Bool.self, forKey: .endingSeen) ?? false
+        galleryPictureVariants = try c.decodeIfPresent([Int].self, forKey: .galleryPictureVariants)
+            ?? [0, 0, 0, 0, 0]
+        stagePictureIndex = max(0, try c.decodeIfPresent(Int.self, forKey: .stagePictureIndex) ?? 0)
+        if galleryPictureVariants.count != 5 {
+            galleryPictureVariants = [0, 0, 0, 0, 0]
+        } else {
+            galleryPictureVariants = galleryPictureVariants.map { min(9, max(0, $0)) }
+        }
+    }
 
     var totalKeys: Int { keys.joined().filter { $0 }.count }
 
@@ -66,18 +97,39 @@ struct PlayerProfile: Codable {
         return dir.appendingPathComponent("player.json")
     }
 
-    static func load() -> PlayerProfile {
-        guard persistenceEnabled, let d = try? Data(contentsOf: url), let p = try? JSONDecoder().decode(PlayerProfile.self, from: d)
-        else { return PlayerProfile() }
-        return p
-    }
-
     /// Off in headless snapshot runs so tests never touch the real save file.
     static var persistenceEnabled = true
+}
+
+/// The on-disk container for the app's local player profiles. A legacy
+/// single-profile JSON file is accepted and wrapped on the next save.
+struct PlayerRoster: Codable {
+    var players: [PlayerProfile]
+    var selectedIndex: Int
+
+    init(players: [PlayerProfile] = [PlayerProfile()], selectedIndex: Int = 0) {
+        self.players = players.isEmpty ? [PlayerProfile()] : players
+        self.selectedIndex = min(max(0, selectedIndex), self.players.count - 1)
+    }
+
+    static func load() -> PlayerRoster {
+        guard PlayerProfile.persistenceEnabled, let data = try? Data(contentsOf: PlayerProfile.url) else {
+            return PlayerRoster()
+        }
+        let decoder = JSONDecoder()
+        if let roster = try? decoder.decode(PlayerRoster.self, from: data), !roster.players.isEmpty {
+            return PlayerRoster(players: roster.players, selectedIndex: roster.selectedIndex)
+        }
+        if let legacy = try? decoder.decode(PlayerProfile.self, from: data) {
+            return PlayerRoster(players: [legacy])
+        }
+        return PlayerRoster()
+    }
 
     func save() {
-        guard Self.persistenceEnabled else { return }
-        if let d = try? JSONEncoder().encode(self) { try? d.write(to: Self.url) }
+        guard PlayerProfile.persistenceEnabled,
+              let data = try? JSONEncoder().encode(self) else { return }
+        try? data.write(to: PlayerProfile.url, options: .atomic)
     }
 }
 
@@ -108,7 +160,18 @@ final class Game {
     let exe: ExeTables?
     let fb = Framebuffer()
     let audio = AudioSystem()
-    var player: PlayerProfile
+    private var roster: PlayerRoster
+    private var activePlayerIndex: Int
+    var player: PlayerProfile {
+        get { roster.players[activePlayerIndex] }
+        set { roster.players[activePlayerIndex] = newValue }
+    }
+    var playerCount: Int { roster.players.count }
+    var selectedPlayerIndex: Int { activePlayerIndex }
+    func playerName(at index: Int) -> String? { roster.players.indices.contains(index) ? roster.players[index].name : nil }
+    func playerNameExists(_ name: String) -> Bool {
+        roster.players.contains { $0.name.caseInsensitiveCompare(String(name.prefix(16))) == .orderedSame }
+    }
     /// Menu index of the current activity (DAT_004471d6).
     var activity = 0
     /// Exteriors whose host introduction has played this session.
@@ -128,13 +191,21 @@ final class Game {
     private(set) var tickCount = 0
     private var lips: LipSync?
     var onQuitRequest: (() -> Void)?
+    var onCreatePlayer: (() -> String?)?
     var onFrame: (() -> Void)?
     private var paletteId = -1
 
     init(root: URL) throws {
         res = try ResourceStore(root: root)
         exe = ExeTables(root: root)
-        player = PlayerProfile.load()
+        roster = PlayerRoster.load()
+        activePlayerIndex = roster.selectedIndex
+        if PlayerProfile.persistenceEnabled, roster.players.count == 1,
+           let oldVariants = UserDefaults.standard.array(forKey: "GalleryPictureVariants") as? [Int],
+           oldVariants.count == 5, roster.players[0].galleryPictureVariants == [0, 0, 0, 0, 0] {
+            roster.players[0].galleryPictureVariants = oldVariants.map { min(9, max(0, $0)) }
+            roster.save()
+        }
         audio.enabled = player.soundOn
     }
 
@@ -165,7 +236,7 @@ final class Game {
         scene = p.scene
         if let s = p.sound { say(s) }
         p.scene.enter(self)
-        player.save()
+        savePlayer()
     }
 
     // MARK: Background and palette
@@ -214,7 +285,38 @@ final class Game {
         player.soundOn.toggle()
         audio.enabled = player.soundOn
         if !player.soundOn { audio.stopSpeech(); audio.stopMusic() } else { say(1238) }
-        player.save()
+        savePlayer()
+    }
+
+    func savePlayer() {
+        roster.selectedIndex = activePlayerIndex
+        roster.save()
+    }
+
+    @discardableResult
+    func selectPlayer(_ index: Int) -> Bool {
+        guard roster.players.indices.contains(index) else { return false }
+        audio.stopSpeech()
+        audio.stopMusic()
+        activePlayerIndex = index
+        roster.selectedIndex = index
+        audio.enabled = player.soundOn
+        savePlayer()
+        return true
+    }
+
+    @discardableResult
+    func addPlayer(named rawName: String) -> Bool {
+        let name = String(rawName.trimmingCharacters(in: .whitespacesAndNewlines).prefix(16))
+        guard !name.isEmpty, roster.players.count < 99, !playerNameExists(name) else { return false }
+        var profile = PlayerProfile()
+        profile.name = name
+        roster.players.append(profile)
+        activePlayerIndex = roster.players.count - 1
+        roster.selectedIndex = activePlayerIndex
+        audio.enabled = profile.soundOn
+        savePlayer()
+        return true
     }
 
     // MARK: Input and ticks

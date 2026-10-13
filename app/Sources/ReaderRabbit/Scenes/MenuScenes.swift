@@ -37,6 +37,79 @@ enum Activity: Int, CaseIterable {
     }
 }
 
+/// Port-owned multi-player picker. The original scene 30200 is not yet mapped.
+final class PlayerSignInScene: Scene {
+    private let rowTop = 142
+    private let rowHeight = 34
+    private let visiblePlayers = 7
+    private var selected = 0
+    private var font: BitmapFont?
+
+    func enter(_ game: Game) {
+        game.setBackground(2000, palette: 2000)
+        selected = game.selectedPlayerIndex
+        font = game.res.font(1012)
+    }
+
+    private func firstVisibleIndex(_ game: Game) -> Int {
+        max(0, min(selected - visiblePlayers + 1, game.playerCount - visiblePlayers))
+    }
+
+    private func signIn(_ game: Game) {
+        guard game.selectPlayer(selected) else { return }
+        game.change(to: MainMenuScene())
+    }
+
+    func click(_ game: Game, x: Int, y: Int) {
+        guard x >= 115, x < 525 else { return }
+        let row = (y - rowTop) / rowHeight
+        if y >= rowTop, row >= 0, row < visiblePlayers {
+            let index = firstVisibleIndex(game) + row
+            if index < game.playerCount { selected = index; signIn(game); return }
+        }
+        if y >= 395, y < 435, let name = game.onCreatePlayer?(), game.addPlayer(named: name) {
+            selected = game.selectedPlayerIndex
+            game.change(to: MainMenuScene())
+        }
+    }
+
+    func key(_ game: Game, _ key: Key) {
+        switch key {
+        case .escape: game.requestQuit()
+        case .enter: signIn(game)
+        case .up: selected = (selected + game.playerCount - 1) % game.playerCount
+        case .down: selected = (selected + 1) % game.playerCount
+        case .char("+"):
+            if let name = game.onCreatePlayer?(), game.addPlayer(named: name) {
+                selected = game.selectedPlayerIndex
+                game.change(to: MainMenuScene())
+            }
+        default: break
+        }
+    }
+
+    func tick(_ game: Game) {}
+
+    func draw(_ game: Game, _ fb: Framebuffer) {
+        guard let font else { return }
+        let title = "WHO'S PLAYING?".macRoman
+        fb.drawText(title, font: font, x: (640 - font.width(of: title)) / 2, y: 100, color: 0x20)
+        let start = firstVisibleIndex(game)
+        for row in 0..<visiblePlayers {
+            let index = start + row
+            guard index < game.playerCount, let name = game.playerName(at: index) else { continue }
+            let y = rowTop + row * rowHeight
+            if index == selected { fb.fill(x: 115, y: y, w: 410, h: 30, color: 0x91) }
+            let label = "\(index == selected ? ">" : " ")  \(name)".macRoman
+            fb.drawText(label, font: font, x: 132, y: y + 23, color: index == selected ? 0x20 : 0x2A)
+        }
+        let add = "+  ADD PLAYER".macRoman
+        fb.drawText(add, font: font, x: 132, y: 423, color: 0x20)
+        let hint = "CLICK A PLAYER TO CONTINUE; ARROWS + ENTER ALSO WORK".macRoman
+        fb.drawText(hint, font: font, x: max(8, (640 - font.width(of: hint)) / 2), y: 458, color: 0x2A)
+    }
+}
+
 /// Main menu carousel (enter FUN_00419983, layout COMB 8810, background 2000).
 final class MainMenuScene: LayoutScene {
     /// Lip-synced greetings, cycled on each visit (pointer table at 0x441b20).

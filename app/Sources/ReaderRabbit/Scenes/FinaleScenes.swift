@@ -55,7 +55,7 @@ extension MainMenuScene {
     func startFinale(_ game: Game) {
         stopScript(game)
         game.player.endingSeen = true
-        game.player.save()
+        game.savePlayer()
         game.change(to: EndingScene())
     }
 }

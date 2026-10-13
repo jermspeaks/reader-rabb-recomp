@@ -127,7 +127,7 @@ final class ABCDinerScene: Scene {
 
     func exit(_ game: Game) {
         game.stopMusic()
-        game.player.save()
+        game.savePlayer()
     }
 
     // MARK: Orders (FUN_0042c927 / FUN_0042c73b)
@@ -298,7 +298,7 @@ final class ABCDinerScene: Scene {
         case .reward:
             if tickShow(game) {
                 game.player.completeLevel(Activity.abcDiner.rawValue)
-                game.player.save()
+                game.savePlayer()
                 runScript([-4, Self.praise[game.random(Self.praise.count)], -2])
                 phase = .rewardExit
                 phaseTicks = 0
@@ -491,7 +491,7 @@ final class ABCDinerScene: Scene {
                 phaseTicks = 0
                 return
             }
-            game.player.save()
+            game.savePlayer()
             if p == 4 {
                 let finale = level == 0 ? 8400 : 8601 + game.random(4)
                 startShow(game, [8230, 8231, 8232, 8606,

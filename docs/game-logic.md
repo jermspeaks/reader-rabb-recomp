@@ -165,7 +165,7 @@ A marching band has gaps in its line-up, and the child fills them so a colour, a
   - Counting Club's used-content bitmask mixes index scales.
   - Shape Shack's level-0 order list has 20 entries for 19 rows.
   - Pattern Parade's level-0 rows 36–43 look unreachable.
-- **Original behavior with incomplete mapping:** sign-in scene 30200 is not mapped and is not implemented in the port (the port currently has one player). Scene 30300 (`FUN_0041af24`) remains unreferenced and unexplained. The intro/title/carousel, finale/credits, parent menu, and bonus areas now have port implementations, but that does not mean every original branch or resource use has been reverse-engineered. The uses of SPEECH 20000–20098 and 22000–22259 remain to be characterized.
+- **Original behavior with incomplete mapping:** sign-in scene 30200 is still not mapped. The port substitutes its own roster picker (`PlayerSignInScene`) with an AppKit add-name prompt and per-profile progress; this is an implementation choice, not an observed recreation of the original screen. Scene 30300 (`FUN_0041af24`) remains unreferenced and unexplained. The intro/title/carousel, finale/credits, parent menu, and bonus areas have port implementations, but that does not mean every original branch or resource use has been reverse-engineered. The uses of SPEECH 20000–20098 and 22000–22259 remain to be characterized.
 - **Unknown fields:** a few player-record fields (`+0xc`, `+0x20`, `+0x8a`, `+0x92–0xa5`) and roster state −2.
 - **Unextracted resources:** dialog resources inside the EXE (`0xbc7`, `0xbdb`, `0xbe0`, `0xbea`, `0x3a7`, 2000–2003).
 
@@ -182,9 +182,10 @@ The port in `app/` re-implements the engine described above. It doesn't emulate 
 | Busy-wait tick at `1000/fps − 9` ms | `AppDelegate.pump()` against a deadline, using the same period formula |
 | Software mixer, two channels | `AudioSystem` (AVAudioEngine; speech/SFX and music nodes) |
 | LIPS polling | `LipSync`: one mouth value per tick, routed to the actor named in the LIPS header |
-| `RRP.DAT` player records | `PlayerProfile` JSON, indexed in menu order (the save-file order trap doesn't apply) |
+| `RRP.DAT` player roster/records | `PlayerRoster` JSON containing menu-order `PlayerProfile` values; legacy single-profile JSON is loaded as a one-player roster (the save-file order trap doesn't apply) |
+| Gallery variants and stage picture index | Stored in the active `PlayerProfile`; the previous gallery `UserDefaults` value is migrated when a one-player legacy save is loaded |
 | Tables in `RRPW32.EXE` (food names, orders) | `ExeTables` reads them from the user's EXE at runtime |
-| WM mouse input | `GameView` maps mouse-down, coalesced movement and mouse-up into ordered engine events; Shape Shack and Crazy Costumes move carried sprites and commit a drop on release. Click-to-pick/drop and supported keyboard actions remain |
+| WM mouse input | `GameView` maps mouse-down, coalesced movement and mouse-up into ordered engine events; Shape Shack and Crazy Costumes move carried sprites and commit a drop on release. Crazy Costumes now resolves drops using the release pointer's target region, not the carried sprite's bounds. Click-to-pick/drop and supported keyboard actions remain |
 | ABC Diner scripted chef animation commands 1–4 | Port interprets them using ASEQs 8100–8103; served food interpolates from shelf to bowl over four scene ticks and a wrong item returns; customer reaction ASEQs 8501–8508 play as one-shots |
 | ABC Diner bonus/reward shows | Port plays the documented ASEQ IDs in sequence, centering each sprite. This layout/timing is an approximation, not an observed match to the original |
 

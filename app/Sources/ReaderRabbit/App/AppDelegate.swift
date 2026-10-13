@@ -32,7 +32,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { true }
 
-    func applicationWillTerminate(_ notification: Notification) { game?.player.save() }
+    func applicationWillTerminate(_ notification: Notification) { game?.savePlayer() }
 
     // MARK: Game folder
 
@@ -92,6 +92,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             let g = try Game(root: root)
             g.onFrame = { [weak self, weak g] in self?.view?.present(g?.fb.makeImage()) }
             g.onQuitRequest = { [weak self] in self?.confirmQuit() }
+            g.onCreatePlayer = { [weak self, weak g] in self?.requestPlayerName(playerCount: g?.playerCount ?? 0) }
             game = g
             view?.game = g
             g.start(IntroScene())
@@ -127,11 +128,44 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         if alert.runModal() == .alertFirstButtonReturn { NSApp.terminate(nil) }
     }
 
+    private func requestPlayerName(playerCount: Int) -> String? {
+        guard playerCount < 99 else {
+            let alert = NSAlert()
+            alert.messageText = "The player list is full."
+            alert.informativeText = "The original game supports up to 99 player records."
+            alert.runModal()
+            return nil
+        }
+        let alert = NSAlert()
+        alert.messageText = "Add a player"
+        alert.informativeText = "Enter a name (up to 16 characters)."
+        alert.addButton(withTitle: "Add")
+        alert.addButton(withTitle: "Cancel")
+        let field = NSTextField(frame: NSRect(x: 0, y: 0, width: 260, height: 24))
+        field.placeholderString = "Player name"
+        alert.accessoryView = field
+        guard alert.runModal() == .alertFirstButtonReturn else { return nil }
+        let name = String(field.stringValue.trimmingCharacters(in: .whitespacesAndNewlines).prefix(16))
+        guard !name.isEmpty else { return nil }
+        if game?.playerNameExists(name) == true {
+            let duplicate = NSAlert()
+            duplicate.messageText = "That player name is already in use."
+            duplicate.informativeText = "Choose a different name."
+            duplicate.runModal()
+            return nil
+        }
+        return name
+    }
+
+    @objc private func switchPlayer(_ sender: Any?) {
+        game?.change(to: PlayerSignInScene())
+    }
+
     @objc private func toggleSound(_ sender: Any?) { game?.toggleSound() }
 
     @objc private func toggleCase(_ sender: Any?) {
         game?.player.lowercase.toggle()
-        game?.player.save()
+        game?.savePlayer()
     }
 
     /// The original's Ctrl+P parent overlay (FUN_0041ce84).
@@ -141,12 +175,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
     @objc private func resetProgress(_ sender: Any?) {
         let alert = NSAlert()
-        alert.messageText = "Reset all progress and keys?"
+        alert.messageText = "Reset progress and keys for this player?"
         alert.addButton(withTitle: "Reset")
         alert.addButton(withTitle: "Cancel")
         guard alert.runModal() == .alertFirstButtonReturn, let g = game else { return }
-        g.player = PlayerProfile()
-        g.player.save()
+        let previous = g.player
+        var fresh = PlayerProfile()
+        fresh.name = previous.name
+        fresh.lowercase = previous.lowercase
+        fresh.soundOn = previous.soundOn
+        fresh.galleryPictureVariants = previous.galleryPictureVariants
+        fresh.stagePictureIndex = previous.stagePictureIndex
+        g.player = fresh
+        g.savePlayer()
         g.change(to: MainMenuScene())
     }
 
@@ -168,6 +209,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         gameMenu.addItem(withTitle: "Upper/Lower Case Letters", action: #selector(toggleCase(_:)), keyEquivalent: "")
         gameMenu.addItem(.separator())
         gameMenu.addItem(withTitle: "Choose Game Folder…", action: #selector(chooseFolder(_:)), keyEquivalent: "o")
+        gameMenu.addItem(withTitle: "Switch Player…", action: #selector(switchPlayer(_:)), keyEquivalent: "")
         gameMenu.addItem(withTitle: "Parent Options…", action: #selector(parentOptions(_:)), keyEquivalent: "p")
         gameMenu.addItem(withTitle: "Reset Progress…", action: #selector(resetProgress(_:)), keyEquivalent: "")
         for item in gameMenu.items { item.target = self }

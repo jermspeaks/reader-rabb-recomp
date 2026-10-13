@@ -269,7 +269,7 @@ final class ParentMenuScene: Scene {
             case 2: pending = .open(.levels)
             case 3:
                 game.player.lowercase.toggle()
-                game.player.save()
+                game.savePlayer()
                 if !game.player.lowercase { sound = 1232 }
             case 4: pending = .mainMenu
             case 5: pending = .signIn
@@ -308,7 +308,7 @@ final class ParentMenuScene: Scene {
             game.audio.enabled = false
             game.stopMusic()
         }
-        game.player.save()
+        game.savePlayer()
     }
 
     private func perform(_ game: Game, _ a: Action) {
@@ -423,7 +423,7 @@ final class ParentMenuScene: Scene {
                 game.player.level[row] = col
                 game.player.progress[row] = 0
                 game.player.usedContent[row] = []
-                game.player.save()
+                game.savePlayer()
                 startEyes(7)
                 return
             }

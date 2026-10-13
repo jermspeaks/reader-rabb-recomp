@@ -76,7 +76,6 @@ final class GalleryScene: Scene {
     private static let firstReturnScript = [22202]
 
     private static let idleTicks = 160          // 20 000 ms at 8 fps
-    private static let variantsKey = "GalleryPictureVariants"
 
     // MARK: Session globals (BSS in the original; reset by FUN_00415565 on player load)
 
@@ -85,15 +84,7 @@ final class GalleryScene: Scene {
     private static var music = 0x778a            // DAT_00446f48
     private static var hallTrack = 0x7791        // DAT_004417cc
     private static var lastHallPrompt = 22208    // DAT_0044177a
-    /// Per-picture variant 0–9 (DAT_00446f32.., saved at player record +0x94).
-    private static var variants: [Int] {
-        get {
-            let v = UserDefaults.standard.array(forKey: variantsKey) as? [Int] ?? []
-            return v.count == 5 ? v : [0, 0, 0, 0, 0]
-        }
-        set { UserDefaults.standard.set(newValue, forKey: variantsKey) }
-    }
-
+    /// Per-picture variant 0–9 (DAT_00446f32..; stored with the active profile).
     // MARK: State
 
     private var state = -1          // DAT_00446f28
@@ -151,7 +142,7 @@ final class GalleryScene: Scene {
             game.setBackground(2100)
         } else {
             Self.music = Self.pictureMusic[view - 1]
-            let v = Self.variants[view - 1], hi = v > 4
+            let v = game.player.galleryPictureVariants[view - 1], hi = v > 4
             let bg = Self.pictureBase[view - 1] + (hi ? 1000 : 0)
             game.setBackground(bg, palette: bg)
         }
@@ -173,7 +164,7 @@ final class GalleryScene: Scene {
             if let a = r.aseq(2101) { highlight = Actor(a, x: 0, y: 0, step: highlightStep) }
             exitSign = r.aseq(212).map { Actor($0, x: 550, y: 415, step: 1) }
         } else {
-            let v = Self.variants[view - 1], hi = v > 4
+            let v = game.player.galleryPictureVariants[view - 1], hi = v > 4
             let id = Self.pictureBase[view - 1] + (hi ? 1000 + v - 4 : v + 1)
             if let a = r.aseq(id) { picture = Actor(a, x: 0, y: 0, step: 1) }
             exitSign = r.aseq(2104).map { Actor($0, x: 562, y: 423, step: 1) }
@@ -343,10 +334,9 @@ final class GalleryScene: Scene {
     }
 
     /// Advance picture `view`'s variant (0–9) for the next visit.
-    private func nextVariant() {
-        var v = Self.variants
-        v[view - 1] = (v[view - 1] + 1) % 10
-        Self.variants = v
+    private func nextVariant(_ game: Game) {
+        game.player.galleryPictureVariants[view - 1] = (game.player.galleryPictureVariants[view - 1] + 1) % 10
+        game.savePlayer()
     }
 
     /// FUN_00415020
@@ -355,7 +345,7 @@ final class GalleryScene: Scene {
         idleDeadline = game.tickCount + Self.idleTicks
         if exitSign?.rect.contains(x, y) == true {
             if view == 0 { leave(game); return }
-            if state == 9 { nextVariant() }
+            if state == 9 { nextVariant(game) }
             state = 11
             return
         }
@@ -371,7 +361,7 @@ final class GalleryScene: Scene {
         } else {
             if state == 9, picture?.rect.contains(x, y) == true {
                 game.say(7103 + game.random(5))
-                nextVariant()
+                nextVariant(game)
                 state = 10
                 return
             }
@@ -905,6 +895,7 @@ final class StageScene: Scene {
 
     func enter(_ game: Game) {
         game.setBackground(2300, palette: 2300)
+        Self.pictureIndex = max(0, game.player.stagePictureIndex)
         stampExitSign(game)
         loadLayout(game)
         state = -1
@@ -1306,6 +1297,8 @@ final class StageScene: Scene {
             guard hostAnim == -1, clickTime <= now else { break }
             let n = Self.pictureIndex % 9
             Self.pictureIndex = n + 1
+            game.player.stagePictureIndex = Self.pictureIndex
+            game.savePlayer()
             let k = Self.pictureOrder[n]
             game.setBackground(2330 + 2 * k, palette: 2300)
             picture = actor(game, 2331 + 2 * k, 0, 0, 0)
@@ -1679,15 +1672,10 @@ final class CostumesScene: Scene {
         itemHidden = false
     }
 
-    private func overlaps(_ a: Rect, _ b: (Int, Int, Int, Int)) -> Bool {
-        a.x < b.2 && b.0 <= a.x + a.w && a.y < b.3 && b.1 <= a.y + a.h
-    }
 
     private func drop(_ game: Game, _ x: Int, _ y: Int) {
-        guard let d = drag else { return }
-        var r = d.rect
-        if !(x >= r.x && x < r.x + r.w && y >= r.y && y < r.y + r.h) { r = Rect(x: x, y: y, w: 1, h: 1) }
-        guard let k = Self.targets.firstIndex(where: { overlaps(r, $0) }) else { cancelDrag(); return }
+        guard drag != nil else { return }
+        guard let k = Self.targets.firstIndex(where: { inside($0, x, y) }) else { cancelDrag(); return }
         if k > 1 { nextItem(game); return }
         let kind = kinds[kindCursor]
         names[k] = 0
