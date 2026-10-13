@@ -56,10 +56,25 @@ final class ABCDinerScene: Scene {
     private var misses = 0
     private var customer = 0
     private var selected: Int?
-    private var servedFood: (code: Int, x: Int, y: Int)?
+    private var servedFood: FoodFlight?
+    private var foodReturning = false
+    private var chefGesture: Actor?
+    private var customerReaction: Actor?
+    private var showSequence: [Int] = []
+    private var showActor: Actor?
+    private var showActorTicks = 0
+
+    private struct FoodFlight {
+        var code: Int
+        var fromX: Int
+        var fromY: Int
+        var toX: Int
+        var toY: Int
+        var progress = 0
+    }
 
     private enum Phase {
-        case intro, arrive, prompt, waitInput, opening, serving, feedback, recap, reaction, reward, leaving
+        case intro, arrive, prompt, waitInput, opening, serving, feedback, recap, reaction, bonus, reward, rewardExit, leaving
     }
     private var phase = Phase.intro
     private var script: [Int] = []
@@ -129,6 +144,7 @@ final class ABCDinerScene: Scene {
         wanted = []
         served = [nil, nil, nil]
         missed = [false, false, false]
+        customerReaction = nil
         item = 0
         misses = 0
         buildShelf(game)
@@ -206,11 +222,23 @@ final class ABCDinerScene: Scene {
     private var scriptDone: Bool { script.isEmpty && scriptDelay == 0 }
 
     private func stepScript(_ game: Game) {
+        if let gesture = chefGesture {
+            if gesture.advance() == .ended { chefGesture = nil }
+            return
+        }
         guard game.mouth == nil, !game.speechPlaying else { return }
         if scriptDelay > 0 { scriptDelay -= 1; return }
         guard !script.isEmpty else { return }
         let v = script.removeFirst()
-        if v < 0 { scriptDelay = -v } else { game.sayWithLips(v) }
+        if v < 0 {
+            scriptDelay = -v
+        } else if (1...4).contains(v) {
+            if let a = game.res.aseq(8099 + v), let chef {
+                chefGesture = Actor(a, x: chef.x, y: chef.y, step: a.steps.firstIndex(where: { $0.frame >= 0 }) ?? 0)
+            }
+        } else {
+            game.sayWithLips(v)
+        }
     }
 
     /// Prompt for the current item (pointer table 0x44517c, patched in state 9).
@@ -227,6 +255,7 @@ final class ABCDinerScene: Scene {
 
     func tick(_ game: Game) {
         stepScript(game)
+        if let reaction = customerReaction, reaction.advance() != .moved { customerReaction = nil }
         animateSpeakers(game)
         animateDoors()
         phaseTicks += 1
@@ -245,14 +274,36 @@ final class ABCDinerScene: Scene {
                 runScript(promptScript())
             }
         case .serving:
+            if var flight = servedFood {
+                flight.progress = min(4, phaseTicks)
+                servedFood = flight
+            }
             if phaseTicks >= 4 { checkServed(game) }
         case .feedback:
+            if foodReturning, var flight = servedFood {
+                flight.progress = max(0, 4 - phaseTicks)
+                servedFood = flight
+            }
             if scriptDone, phaseTicks > 3 { nextItem(game) }
         case .recap:
             if scriptDone { finishOrder(game) }
         case .reaction:
             if scriptDone, phaseTicks > 2 { afterReaction(game) }
+        case .bonus:
+            if tickShow(game) {
+                newOrder(game)
+                phase = .intro
+                phaseTicks = 0
+            }
         case .reward:
+            if tickShow(game) {
+                game.player.completeLevel(Activity.abcDiner.rawValue)
+                game.player.save()
+                runScript([-4, Self.praise[game.random(Self.praise.count)], -2])
+                phase = .rewardExit
+                phaseTicks = 0
+            }
+        case .rewardExit:
             if scriptDone, phaseTicks > 6 {
                 phase = .leaving
                 game.change(to: MainMenuScene(greet: false),
@@ -272,7 +323,13 @@ final class ABCDinerScene: Scene {
     private func animateSpeakers(_ game: Game) {
         let m = game.mouth, who = game.mouthActor
         if let chef {
-            if who == 8100, let m { chef.step = m + 1 } else { chef.step = 1 }
+            if let gesture = chefGesture {
+                chef.set(gesture.aseq, step: gesture.step)
+            } else if who == 8100, let m {
+                chef.set(game.res.aseq(8100) ?? chef.aseq, step: m + 1)
+            } else {
+                chef.set(game.res.aseq(8100) ?? chef.aseq, step: 1)
+            }
         }
         if let waiter {
             if who == 8210, let m, let talk = game.res.aseq(8210) {
@@ -359,8 +416,11 @@ final class ABCDinerScene: Scene {
         game.stopSpeech()
         let code = shelf[k].letter * 2 + shelf[k].list
         if let bowlRect = bowl?.rect, let s = foods[k].sprite {
-            servedFood = (code, bowlRect.midX - s.width / 2, bowlRect.y - s.height + 14)
+            let source = foods[k].rect
+            servedFood = FoodFlight(code: code, fromX: source.x, fromY: source.y,
+                                    toX: bowlRect.midX - s.width / 2, toY: bowlRect.y - s.height + 14)
         }
+        foodReturning = false
         served[item] = code
         foods[k].hidden = true
         selected = nil
@@ -377,13 +437,13 @@ final class ABCDinerScene: Scene {
         let correct = code == want || (level > 1 && code & ~1 == want & ~1)
         if correct {
             game.say(8110)
-            runScript([-3])
+            runScript([2, -3])
         } else {
             missed[item] = true
             misses += 1
-            servedFood = nil
+            foodReturning = true
             game.say(8116)
-            runScript([-3, Self.tryAgain[game.random(Self.tryAgain.count)]])
+            runScript([3, -3, Self.tryAgain[game.random(Self.tryAgain.count)]])
         }
         phase = .feedback
         phaseTicks = 0
@@ -391,6 +451,7 @@ final class ABCDinerScene: Scene {
 
     private func nextItem(_ game: Game) {
         servedFood = nil
+        foodReturning = false
         item += 1
         if item < 3 {
             buildShelf(game)
@@ -409,6 +470,8 @@ final class ABCDinerScene: Scene {
     }
 
     private func finishOrder(_ game: Game) {
+        let reaction = misses == 0 ? 8501 + 2 * game.random(3) : 8502 + 2 * game.random(4)
+        customerReaction = game.res.aseq(reaction).map { Actor($0, x: 481, y: 160, step: $0.steps.firstIndex(where: { $0.frame >= 0 }) ?? 0) }
         runScript([(misses == 0 ? 11001 : 11002) + 3 * customer])
         phase = .reaction
         phaseTicks = 0
@@ -423,19 +486,60 @@ final class ABCDinerScene: Scene {
             let p = game.player.progress[act]
             game.say(25000 + (p + 1) / 2)
             if p >= 8 {
-                game.player.completeLevel(act)
-                game.player.save()
-                runScript([-4, Self.praise[game.random(Self.praise.count)], -2])
+                startShow(game, [8520, 8521, 8531 + level])
                 phase = .reward
                 phaseTicks = 0
                 return
             }
             game.player.save()
+            if p == 4 {
+                let finale = level == 0 ? 8400 : 8601 + game.random(4)
+                startShow(game, [8230, 8231, 8232, 8606,
+                                 game.random(2) == 0 ? 8600 : 8605, finale])
+                phase = .bonus
+                phaseTicks = 0
+                return
+            }
             runScript([-4, Self.praise[game.random(Self.praise.count)]])
         }
         newOrder(game)
         phase = .intro
         phaseTicks = 0
+    }
+
+    /// Show resources and order are observed in the original; centering them as
+    /// a single sequence is an approximation pending a local visual comparison.
+    private func startShow(_ game: Game, _ ids: [Int]) {
+        showSequence = ids
+        showActor = nil
+        showActorTicks = 0
+        customerReaction = nil
+    }
+
+    private func tickShow(_ game: Game) -> Bool {
+        while showActor == nil {
+            guard !showSequence.isEmpty else { return true }
+            let id = showSequence.removeFirst()
+            guard let a = game.res.aseq(id) else { continue }
+            showActor = Actor(a, step: a.steps.firstIndex(where: { $0.frame >= 0 }) ?? 0)
+            showActorTicks = 0
+            centerShowActor()
+        }
+        guard let showActor else { return showSequence.isEmpty }
+        showActorTicks += 1
+        if showActor.advance() == .ended || showActorTicks >= 90 {
+            self.showActor = nil
+        } else {
+            centerShowActor()
+        }
+        return self.showActor == nil && showSequence.isEmpty
+    }
+
+    private func centerShowActor() {
+        guard let showActor else { return }
+        let r = showActor.rect
+        showActor.x += 320 - r.midX
+        showActor.y += 240 - r.midY
     }
 
     private func leave(_ game: Game) {
@@ -493,8 +597,12 @@ extension ABCDinerScene {
         waiter?.draw(fb)
         bowl?.draw(fb)
         if let f = servedFood, let a = game.res.aseq(8023), let s = Actor(a, step: f.code / 2 + (f.code & 1) * 27).sprite {
-            fb.draw(s, x: f.x, y: f.y)
+            let x = f.fromX + (f.toX - f.fromX) * f.progress / 4
+            let y = f.fromY + (f.toY - f.fromY) * f.progress / 4
+            fb.draw(s, x: x, y: y)
         }
+        customerReaction?.draw(fb)
+        showActor?.draw(fb)
         exitSign?.draw(fb)
         let act = Activity.abcDiner.rawValue
         let earned = game.player.keys[act][min(3, level)]

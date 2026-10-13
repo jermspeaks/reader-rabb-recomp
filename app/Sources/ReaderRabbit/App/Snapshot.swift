@@ -4,7 +4,7 @@ import UniformTypeIdentifiers
 
 /// Headless driver for development checks:
 ///   ReaderRabbit --snapshot --game DIR --out DIR "t 20" "click 500 100" "shot menu" ...
-/// Commands: `t N` runs N ticks, `click X Y`, `key NAME` (escape, enter, space,
+/// Commands: `t N` runs N ticks, `click X Y`, `drag X1 Y1 X2 Y2`, `key NAME` (escape, enter, space,
 /// left, right, up, down or a character), `shot NAME` writes NAME.png,
 /// `level A L` sets activity A's level, `start menu|intro|finale|parent|ext N|
 /// game N|bonus N` jumps to a scene. Anything else is passed to the current scene if it is DebugDrivable
@@ -37,7 +37,17 @@ enum Snapshot {
             case "t":
                 for _ in 0..<(Int(p[1]) ?? 1) { game.tick() }
             case "click":
+                let x = Int(p[1]) ?? 0, y = Int(p[2]) ?? 0
+                game.mouseDown(x: x, y: y)
+                game.tick()
+                game.mouseUp(x: x, y: y)
+                game.tick()
+            case "drag":
                 game.mouseDown(x: Int(p[1]) ?? 0, y: Int(p[2]) ?? 0)
+                game.tick()
+                game.mouseMoved(x: Int(p[3]) ?? 0, y: Int(p[4]) ?? 0)
+                game.tick()
+                game.mouseUp(x: Int(p[3]) ?? 0, y: Int(p[4]) ?? 0)
                 game.tick()
             case "key":
                 let map: [String: Key] = ["escape": .escape, "enter": .enter, "space": .space,

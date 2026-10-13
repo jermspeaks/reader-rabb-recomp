@@ -13,6 +13,8 @@ protocol Scene: AnyObject {
     func enter(_ game: Game)
     func tick(_ game: Game)
     func click(_ game: Game, x: Int, y: Int)
+    func mouseMoved(_ game: Game, x: Int, y: Int)
+    func mouseUp(_ game: Game, x: Int, y: Int)
     func key(_ game: Game, _ key: Key)
     func draw(_ game: Game, _ fb: Framebuffer)
     func exit(_ game: Game)
@@ -27,6 +29,8 @@ protocol DebugDrivable {
 
 extension Scene {
     var fps: Int { 8 }
+    func mouseMoved(_ game: Game, x: Int, y: Int) {}
+    func mouseUp(_ game: Game, x: Int, y: Int) {}
     func key(_ game: Game, _ key: Key) {}
     func exit(_ game: Game) {}
 }
@@ -113,8 +117,14 @@ final class Game {
 
     private(set) var scene: Scene?
     private var pending: (scene: Scene, sound: Int?)?
-    private var inputQueue: [(Int, Int)?] = []
-    private var keyQueue: [Key] = []
+    private enum InputEvent {
+        case mouseDown(Int, Int)
+        case mouseMove(Int, Int)
+        case mouseUp(Int, Int)
+        case key(Key)
+    }
+    private var inputQueue: [InputEvent] = []
+    private var mouseIsDown = false
     private(set) var tickCount = 0
     private var lips: LipSync?
     var onQuitRequest: (() -> Void)?
@@ -209,8 +219,18 @@ final class Game {
 
     // MARK: Input and ticks
 
-    func mouseDown(x: Int, y: Int) { inputQueue.append((x, y)) }
-    func keyDown(_ k: Key) { keyQueue.append(k) }
+    func mouseDown(x: Int, y: Int) { inputQueue.append(.mouseDown(x, y)) }
+
+    func mouseMoved(x: Int, y: Int) {
+        if case .mouseMove? = inputQueue.last {
+            inputQueue[inputQueue.count - 1] = .mouseMove(x, y)
+        } else {
+            inputQueue.append(.mouseMove(x, y))
+        }
+    }
+
+    func mouseUp(x: Int, y: Int) { inputQueue.append(.mouseUp(x, y)) }
+    func keyDown(_ k: Key) { inputQueue.append(.key(k)) }
 
     func random(_ n: Int) -> Int { n <= 1 ? 0 : Int.random(in: 0..<n) }
 
@@ -223,12 +243,21 @@ final class Game {
         } else {
             mouth = nil
         }
-        // One input event per tick, as the original frame loop does.
-        if !inputQueue.isEmpty, let ev = inputQueue.removeFirst() {
-            scene?.click(self, x: ev.0, y: ev.1)
-        } else if !keyQueue.isEmpty {
-            let k = keyQueue.removeFirst()
-            scene?.key(self, k)
+        // One input event per tick, as the original frame loop does. Consecutive
+        // pointer moves are coalesced so high-rate mouse motion cannot grow the queue.
+        if !inputQueue.isEmpty {
+            switch inputQueue.removeFirst() {
+            case let .mouseDown(x, y):
+                mouseIsDown = true
+                scene?.click(self, x: x, y: y)
+            case let .mouseMove(x, y):
+                if mouseIsDown { scene?.mouseMoved(self, x: x, y: y) }
+            case let .mouseUp(x, y):
+                if mouseIsDown { scene?.mouseUp(self, x: x, y: y) }
+                mouseIsDown = false
+            case let .key(k):
+                scene?.key(self, k)
+            }
         }
         processPendingScene()
         scene?.tick(self)

@@ -1452,12 +1452,10 @@ final class StageScene: Scene {
 /// outfit plays that costume's animation (2511–2521 / 2531–2541), then a star
 /// (2590–2593) appears in the trees.
 ///
-/// The original runs at 60 fps so a dragged piece can follow the mouse. The
-/// rest of the logic runs every 7th tick (about 105 ms). This port takes
-/// clicks only, so it runs at the logic rate (9 fps, 102 ms). That keeps the
-/// lip-sync tracks at their normal speed. Dragging becomes click-to-pick-up,
-/// then click a booth to drop. ←/→ drop the piece straight onto a booth, as
-/// in the original.
+/// The original runs at 60 fps so a dragged piece can follow the mouse. This
+/// port keeps its 9 fps scene tick for lip-sync, while the input layer forwards
+/// coalesced pointer moves and releases in order. Click-to-pick-up/click-to-drop
+/// and ←/→ remain available as alternatives.
 final class CostumesScene: Scene {
     var fps: Int { 9 }
 
@@ -1503,6 +1501,9 @@ final class CostumesScene: Scene {
     private var item: Actor?                                       // slot 5
     private var itemHidden = false
     private var drag: Actor?                                       // slot 6 (copy being carried)
+    private var dragOffset = (x: 0, y: 0)
+    private var dragStart = (x: 0, y: 0)
+    private var dragMoved = false
     private var pieces = [Actor?](repeating: nil, count: 6)        // slots 10–15
     private var stars = [Actor?](repeating: nil, count: 24)        // slots 20–43
     private var starDone = [Bool](repeating: false, count: 24)
@@ -1632,6 +1633,7 @@ final class CostumesScene: Scene {
             guard usable(s) else { continue }
             placeItem(s)
             drag = nil
+            dragMoved = false
             itemHidden = false
             return
         }
@@ -1660,15 +1662,20 @@ final class CostumesScene: Scene {
         pieces[p * 3 + part] = actor(game, id, r.x, r.y, part == 0 ? 2 : part + 3)
     }
 
-    private func pickUp() {
+    private func pickUp(x: Int? = nil, y: Int? = nil) {
         guard let item, drag == nil else { return }
         drag = Actor(item.aseq, x: item.x, y: item.y, step: item.step)
+        let point = (x ?? item.rect.midX, y ?? item.rect.midY)
+        dragOffset = (point.0 - item.x, point.1 - item.y)
+        dragStart = point
+        dragMoved = false
         itemHidden = true
     }
 
     private func cancelDrag() {
         guard drag != nil else { return }
         drag = nil
+        dragMoved = false
         itemHidden = false
     }
 
@@ -1895,7 +1902,7 @@ final class CostumesScene: Scene {
         if drag != nil { drop(game, x, y); return }
         if var r = item?.rect, !itemHidden {
             if r.h < 30 { r = Rect(x: r.x - 10, y: r.y - 10, w: r.w + 20, h: r.h + 20) }
-            if x >= r.x, x < r.x + r.w, y >= r.y, y < r.y + r.h { pickUp(); return }
+            if x >= r.x, x < r.x + r.w, y >= r.y, y < r.y + r.h { pickUp(x: x, y: y); return }
         }
         if let k = Self.targets.prefix(2).firstIndex(where: { inside($0, x, y) }) {
             lastBooth = k + 1
@@ -1912,6 +1919,18 @@ final class CostumesScene: Scene {
             return
         }
         if !inside(Self.bush, x, y) { state = 2 }
+    }
+
+    func mouseMoved(_ game: Game, x: Int, y: Int) {
+        guard let drag else { return }
+        dragMoved = dragMoved || x != dragStart.x || y != dragStart.y
+        drag.x = x - dragOffset.x
+        drag.y = y - dragOffset.y
+    }
+
+    func mouseUp(_ game: Game, x: Int, y: Int) {
+        guard drag != nil, dragMoved else { return }
+        drop(game, x, y)
     }
 
     func key(_ game: Game, _ key: Key) {

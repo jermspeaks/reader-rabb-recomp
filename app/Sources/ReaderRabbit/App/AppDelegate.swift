@@ -17,6 +17,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         w.title = "Reader Rabbit's Preschool"
         w.contentAspectRatio = NSSize(width: 4, height: 3)
         w.contentMinSize = NSSize(width: 640, height: 480)
+        w.acceptsMouseMovedEvents = true
         w.center()
         w.delegate = self
         let v = GameView(frame: w.contentLayoutRect)

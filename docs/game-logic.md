@@ -184,6 +184,9 @@ The port in `app/` re-implements the engine described above. It doesn't emulate 
 | LIPS polling | `LipSync`: one mouth value per tick, routed to the actor named in the LIPS header |
 | `RRP.DAT` player records | `PlayerProfile` JSON, indexed in menu order (the save-file order trap doesn't apply) |
 | Tables in `RRPW32.EXE` (food names, orders) | `ExeTables` reads them from the user's EXE at runtime |
+| WM mouse input | `GameView` maps mouse-down, coalesced movement and mouse-up into ordered engine events; Shape Shack and Crazy Costumes move carried sprites and commit a drop on release. Click-to-pick/drop and supported keyboard actions remain |
+| ABC Diner scripted chef animation commands 1–4 | Port interprets them using ASEQs 8100–8103; served food interpolates from shelf to bowl over four scene ticks and a wrong item returns; customer reaction ASEQs 8501–8508 play as one-shots |
+| ABC Diner bonus/reward shows | Port plays the documented ASEQ IDs in sequence, centering each sprite. This layout/timing is an approximation, not an observed match to the original |
 
 ## 8. Corrections found while porting
 

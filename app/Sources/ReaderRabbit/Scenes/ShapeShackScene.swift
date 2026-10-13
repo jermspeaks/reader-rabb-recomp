@@ -141,6 +141,9 @@ final class ShapeShackScene: Scene {
     private var traySlot = [Int?](repeating: nil, count: 6) // DAT_00447e30
     private var crateSlot = [Int?](repeating: nil, count: 6) // DAT_00447e20
     private var carried: Int?                // DAT_00447e64 > 0
+    private var carriedOffset = (x: 0, y: 0)
+    private var dragStart = (x: 0, y: 0)
+    private var dragMoved = false
     private var selected = -1                // DAT_00447dfe
     private var cursor = -1                  // DAT_00447e00
     private var signAnim = [0, 0]            // DAT_00447e06
@@ -1084,9 +1087,15 @@ final class ShapeShackScene: Scene {
 
     private func formed(_ side: Int) -> Bool { crates.count == 6 && crates[side * 3].x != Self.crateHome[side * 3].x }
 
-    private func pick(_ game: Game, _ k: Int) {
+    private func pick(_ game: Game, _ k: Int, x: Int, y: Int) {
         carried = k
         if let t = traySlot.firstIndex(of: k) { traySlot[t] = nil }
+        for p in crateSlot.indices where crateSlot[p] == k { crateSlot[p] = nil }
+        if let piece = pieces[k] {
+            carriedOffset = (x - piece.x, y - piece.y)
+        }
+        dragStart = (x, y)
+        dragMoved = false
         let code = codes[2 + k]
         var s = sound(code)
         if code & 0xF00 != 0 {
@@ -1115,6 +1124,7 @@ final class ShapeShackScene: Scene {
                     place(it, left: (x1 + x2) / 2 - r.w / 2, top: c.y + c.h - 6 - r.h)
                     crateSlot[t] = k
                     carried = nil
+                    dragMoved = false
                     checkGroups(game)
                     checkStuck()
                     return
@@ -1134,6 +1144,7 @@ final class ShapeShackScene: Scene {
             place(it, left: q.x - r.w / 2, top: q.y - r.h)
             traySlot[s] = k
             carried = nil
+            dragMoved = false
             checkGroups(game)
             return
         }
@@ -1144,6 +1155,7 @@ final class ShapeShackScene: Scene {
     /// FUN_00420bb9: the toy stays where it is and joins the spot under it.
     private func dropInPlace(_ k: Int) {
         carried = nil
+        dragMoved = false
         guard let r = pieces[k]?.rect else { return }
         let cx = r.x + 20, cy = r.y + 20
         for t in 0..<6 {
@@ -1291,7 +1303,7 @@ final class ShapeShackScene: Scene {
             if selected >= 0 { hideHighlight() }
             if carried != nil { drop(game, x: x, y: y); return }
             for k in 0..<6 where pieces[k]?.rect.contains(x, y) == true {
-                pick(game, k)
+                pick(game, k, x: x, y: y)
                 return
             }
         }
@@ -1324,6 +1336,18 @@ final class ShapeShackScene: Scene {
             if game.player.keys[act][level] { meterTalk = false }
             game.say(meterTalk ? 21117 + level : 21111 + level)
         }
+    }
+
+    func mouseMoved(_ game: Game, x: Int, y: Int) {
+        guard let carried, let piece = pieces[carried] else { return }
+        dragMoved = dragMoved || x != dragStart.x || y != dragStart.y
+        piece.x = x - carriedOffset.x
+        piece.y = y - carriedOffset.y
+    }
+
+    func mouseUp(_ game: Game, x: Int, y: Int) {
+        guard carried != nil, dragMoved else { return }
+        drop(game, x: x, y: y)
     }
 
     private var meterTalk = false            // DAT_00447e94

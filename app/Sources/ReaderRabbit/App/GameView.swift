@@ -41,6 +41,22 @@ final class GameView: NSView {
 
     override func rightMouseDown(with event: NSEvent) { mouseDown(with: event) }
 
+    override func mouseMoved(with event: NSEvent) { forwardMouseMove(event) }
+    override func mouseDragged(with event: NSEvent) { forwardMouseMove(event) }
+    override func rightMouseDragged(with event: NSEvent) { forwardMouseMove(event) }
+
+    override func mouseUp(with event: NSEvent) { forwardMouseUp(event) }
+    override func rightMouseUp(with event: NSEvent) { forwardMouseUp(event) }
+
+    private func forwardMouseMove(_ event: NSEvent) {
+        if let (x, y) = gamePoint(event) { game?.mouseMoved(x: x, y: y) }
+    }
+
+    private func forwardMouseUp(_ event: NSEvent) {
+        let point = gamePoint(event) ?? (-1, -1)
+        game?.mouseUp(x: point.0, y: point.1)
+    }
+
     override func keyDown(with event: NSEvent) {
         guard let game else { return }
         if event.modifierFlags.contains(.control), event.charactersIgnoringModifiers == "s" {
